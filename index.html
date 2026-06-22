@@ -374,12 +374,11 @@ let pickedCategory = "عام";
 let timers = {};
 let subscriptionId = null;
 
-// === إعدادات OneSignal ===
-// تنبيه أمني: المفتاح أدناه مرئي لأي شخص يفتح كود الصفحة لأن لا يوجد خادم وسيط.
-// مقبول لمشروع شخصي. إن لاحظت إشعارات غريبة لاحقًا: OneSignal > Keys & IDs > Generate New API Key.
+// === إعدادات الإشعارات عبر Cloudflare Worker ===
+// لا يوجد REST API Key داخل التطبيق الآن. المفتاح محفوظ داخل Cloudflare فقط.
 const CONFIG = {
   ONESIGNAL_APP_ID: "d810c491-89a1-41af-bea5-5719bd01b2a8",
-  REST_API_KEY: "os_v2_app_3aimjemjufa27pvfk4m32ansvctg3qz54jsechej6t4i6pgid72nnusbm6t6eomli4qpbu44auqwfcwjgqomjkg3y7pfeuvwilb3oda"
+  WORKER_URL: "https://damp-poetry-9ca9.yaya15112016.workers.dev/"
 };
 
 function save(){ localStorage.setItem(storeKey, JSON.stringify(tasks)); }
@@ -471,7 +470,7 @@ async function diagnosePush(){
       addPushLine("Subscription ID: " + (subscriptionId||"غير موجود بعد"));
       addPushLine("Opted In: " + (OneSignal.User.PushSubscription.optedIn?"نعم":"لا"));
     }
-    addPushLine("مفتاح REST API محفوظ: " + (CONFIG.REST_API_KEY ? "نعم" : "لا"));
+    addPushLine("Cloudflare Worker: " + CONFIG.WORKER_URL);
   }catch(e){ addPushLine("OneSignal لم يكتمل: "+e.message); }
   setHeaderIcon(); setPushBtnState();
 }
@@ -505,7 +504,7 @@ async function requestNotify(){
   setHeaderIcon(); setPushBtnState();
 }
 async function schedulePush(task){
-  if(!CONFIG.REST_API_KEY || !task.due) return null;
+  if(!task.due) return null;
   if(!subscriptionId){
     try{
       const OneSignal = await getOneSignal(8000);
@@ -516,38 +515,37 @@ async function schedulePush(task){
   const when = new Date(task.due);
   if(isNaN(when.getTime()) || when.getTime()<=Date.now()) return null;
   try{
-    const res = await fetch("https://api.onesignal.com/notifications?c=push", {
+    const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST",
-      headers:{ "Content-Type":"application/json", "Authorization":"Key " + CONFIG.REST_API_KEY },
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
-        app_id: CONFIG.ONESIGNAL_APP_ID,
-        target_channel: "push",
-        include_subscription_ids: [subscriptionId],
-        headings: { en:"تذكير مهمة", ar:"تذكير مهمة" },
-        contents: { en: task.title, ar: task.title },
-        send_after: when.toISOString(),
-        priority: 10,
-        ios_sound: "default",
-        ios_interruption_level: "time-sensitive",
-        ios_badgeType: "Increase",
-        ios_badgeCount: 1,
-        android_sound: "default",
-        android_visibility: 1
+        action: "schedule",
+        subscriptionId: subscriptionId,
+        title: "تذكير مهمة",
+        message: task.title,
+        sendAfter: when.toISOString()
       })
     });
     const data = await res.json();
-    if(data && data.id) return data.id;
-    addPushLine("تعذرت جدولة الإشعار: " + JSON.stringify(data.errors||data));
+    if(data && data.ok && data.id) return data.id;
+    if(data && data.ok && data.data && data.data.id) return data.data.id;
+    addPushLine("تعذرت جدولة الإشعار عبر Worker: " + JSON.stringify(data.errors||data));
     return null;
-  }catch(e){ addPushLine("خطأ شبكة عند جدولة الإشعار: "+e.message); return null; }
+  }catch(e){ addPushLine("خطأ Worker عند جدولة الإشعار: "+e.message); return null; }
 }
 async function cancelPush(task){
-  if(!CONFIG.REST_API_KEY || !task?.pushId) return;
-  try{ await fetch(`https://api.onesignal.com/notifications/${task.pushId}?app_id=${CONFIG.ONESIGNAL_APP_ID}`, { method:"DELETE", headers:{ "Authorization":"Key "+CONFIG.REST_API_KEY } }); }
+  if(!task?.pushId) return;
+  try{
+    await fetch(CONFIG.WORKER_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ action:"cancel", notificationId: task.pushId })
+    });
+  }
   catch(e){}
 }
 async function scheduleAllPush(){
-  if(!CONFIG.REST_API_KEY || !subscriptionId) return;
+  if(!subscriptionId) return;
   for(const task of tasks){
     if(!task.done && task.due && !task.pushId){ const id = await schedulePush(task); if(id){ task.pushId=id; save(); render(); } }
   }
@@ -646,7 +644,7 @@ $("addBtn").onclick = async ()=>{
   if(due){
     const id = await schedulePush(task);
     if(id){ task.pushId=id; save(); render(); }
-    else if(CONFIG.REST_API_KEY) toast("⚠️ تذكير محلي فقط — لم تُجدول إشعار حقيقي، افتح فحص الإشعارات");
+    else toast("⚠️ تذكير محلي فقط — لم تُجدول إشعار حقيقي، افتح فحص الإشعارات");
   }
 };
 $("quickHalf").onclick=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d); };

@@ -1,0 +1,15 @@
+مهم قبل التجربة:
+
+1) داخل Cloudflare Worker > Settings > Variables and secrets
+اجعل ONESIGNAL_APP_ID مطابقًا للتطبيق المستخدم داخل index.html:
+
+d810c491-89a1-41af-bea5-5719bd01b2a8
+
+2) اترك ONESIGNAL_REST_API_KEY كما أخذته من نفس تطبيق OneSignal.
+
+3) افتح Edit code في Cloudflare واستبدل كود Worker بمحتوى الملف:
+cloudflare-worker-onesignal.js
+
+4) اضغط Deploy.
+
+5) ارفع ملفات التطبيق إلى GitHub ثم افتح التطبيق من أيقونة الشاشة الرئيسية على الآيفون، وافتح فحص الإشعارات ثم أضف مهمة بوقت بعد 3 دقائق للتجربة.
