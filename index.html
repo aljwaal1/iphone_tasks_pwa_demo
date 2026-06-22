@@ -35,14 +35,14 @@
 
   <style>
     :root{
-      --bg-0:#04060d; --bg-1:#070a17; --bg-2:#0b0f22; --bg-3:#0a0d1c;
-      --glass:rgba(16,20,40,.58); --glass-soft:rgba(16,20,40,.38); --glass-strong:rgba(20,25,48,.74);
-      --hairline:rgba(168,190,255,.10); --hairline-2:rgba(94,234,212,.26);
-      --top-light:rgba(255,255,255,.07);
-      --text:#f3f6fc; --muted:#8d9bc2; --muted-2:#5e6c91;
-      --teal:#2bd9c4; --teal-deep:#0b8f80; --teal-glow:rgba(43,217,196,.30);
-      --gold:#f0c468; --gold-deep:#b8842c; --gold-glow:rgba(240,196,104,.30);
-      --rose:#ff6b7d; --ok:#3fe091;
+      --bg-0:#10163a; --bg-1:#161d4a; --bg-2:#1b2356; --bg-3:#141a42;
+      --glass:rgba(38,46,92,.55); --glass-soft:rgba(38,46,92,.36); --glass-strong:rgba(46,54,104,.72);
+      --hairline:rgba(190,205,255,.16); --hairline-2:rgba(56,239,216,.40);
+      --top-light:rgba(255,255,255,.10);
+      --text:#fbfcff; --muted:#aab6e6; --muted-2:#7d89bd;
+      --teal:#33ecd1; --teal-deep:#0fb9a4; --teal-glow:rgba(51,236,209,.42);
+      --gold:#ffcf6b; --gold-deep:#e0a233; --gold-glow:rgba(255,207,107,.40);
+      --rose:#ff7a8c; --ok:#4cf2a0;
       --r-xl:26px; --r-lg:20px; --r-md:16px; --r-sm:12px;
       --ease:cubic-bezier(.22,1,.36,1);
       --shadow-lg:0 26px 60px rgba(0,0,0,.55);
@@ -54,9 +54,9 @@
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
       color:var(--text);min-height:100vh;overflow-x:hidden;
       background:
-        radial-gradient(700px 460px at 92% -8%, var(--teal-glow), transparent 62%),
-        radial-gradient(620px 420px at -8% 4%, var(--gold-glow), transparent 60%),
-        radial-gradient(900px 700px at 50% 120%, rgba(43,217,196,.08), transparent 60%),
+        radial-gradient(760px 520px at 92% -6%, var(--teal-glow), transparent 65%),
+        radial-gradient(680px 460px at -6% 6%, var(--gold-glow), transparent 62%),
+        radial-gradient(1000px 760px at 50% 115%, rgba(51,236,209,.14), transparent 62%),
         linear-gradient(168deg,var(--bg-0) 0%, var(--bg-1) 38%, var(--bg-2) 70%, var(--bg-3) 100%);
       background-attachment:fixed;
       padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 100px);
@@ -180,10 +180,10 @@
       animation:taskIn .4s var(--ease) both;
     }
     @keyframes taskIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .task::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:4px;border-radius:4px;background:var(--bar)}
-    .task.high{--bar:linear-gradient(var(--rose),#c44156)}
-    .task.med{--bar:linear-gradient(var(--gold),var(--gold-deep))}
-    .task.low{--bar:linear-gradient(var(--teal),var(--teal-deep))}
+    .task::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:5px;border-radius:4px;background:var(--bar)}
+    .task.high{--bar:linear-gradient(var(--rose),#c44156);background:linear-gradient(120deg,rgba(255,122,140,.16),rgba(255,122,140,.04));border-color:rgba(255,122,140,.30)}
+    .task.med{--bar:linear-gradient(var(--gold),var(--gold-deep));background:linear-gradient(120deg,rgba(255,207,107,.16),rgba(255,207,107,.04));border-color:rgba(255,207,107,.30)}
+    .task.low{--bar:linear-gradient(var(--teal),var(--teal-deep));background:linear-gradient(120deg,rgba(51,236,209,.14),rgba(51,236,209,.03));border-color:rgba(51,236,209,.28)}
     .task:active{transform:scale(.99)}
     .task.done{opacity:.55}
     .check{
@@ -195,8 +195,11 @@
     .title{font-weight:800;font-size:15.5px;margin-bottom:5px;word-break:break-word}
     .done .title{text-decoration:line-through;color:var(--muted)}
     .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:11px}
-    .pill{background:rgba(255,255,255,.04);border:1px solid var(--hairline);padding:4px 9px;border-radius:999px}
-    .pill.push{border-color:rgba(43,217,196,.5);color:#a9f7ec}
+    .pill{background:rgba(255,255,255,.05);border:1px solid var(--hairline);padding:4px 9px;border-radius:999px}
+    .pill.push{border-color:rgba(51,236,209,.55);color:#bdfff0}
+    .pill.high{border-color:rgba(255,122,140,.5);color:#ffd6dc}
+    .pill.med{border-color:rgba(255,207,107,.5);color:#ffe9bb}
+    .pill.low{border-color:rgba(51,236,209,.5);color:#c9fff3}
     .actions{display:flex;flex-direction:column;gap:6px}
     .mini{border:1px solid var(--hairline);border-radius:11px;padding:8px 10px;background:rgba(255,255,255,.03);color:var(--text);font-weight:900;transition:.15s}
     .mini:active{transform:scale(.9)}
@@ -502,7 +505,14 @@ async function requestNotify(){
   setHeaderIcon(); setPushBtnState();
 }
 async function schedulePush(task){
-  if(!CONFIG.REST_API_KEY || !subscriptionId || !task.due) return null;
+  if(!CONFIG.REST_API_KEY || !task.due) return null;
+  if(!subscriptionId){
+    try{
+      const OneSignal = await getOneSignal(8000);
+      if(OneSignal.User?.PushSubscription) subscriptionId = OneSignal.User.PushSubscription.id || null;
+    }catch(e){}
+  }
+  if(!subscriptionId){ addPushLine("لم تُجدول مهمة \""+task.title+"\": لا يوجد Subscription ID بعد (افتح فحص الإشعارات للتأكد من التفعيل)."); return null; }
   const when = new Date(task.due);
   if(isNaN(when.getTime()) || when.getTime()<=Date.now()) return null;
   try{
@@ -594,7 +604,7 @@ function render(){
         ${t.note?`<div class="notice">${escapeHtml(t.note)}</div>`:""}
         <div class="meta">
           <span class="pill">${fmt(t.due)}</span>
-          <span class="pill">أولوية ${priText(t.priority)}</span>
+          <span class="pill ${t.priority}">أولوية ${priText(t.priority)}</span>
           <span class="pill">${escapeHtml(t.category)}</span>
           ${t.pushId?`<span class="pill push">🔔 مجدولة</span>`:""}
         </div>
@@ -619,6 +629,10 @@ window.editTask=(id)=>{
   openSheet("addOverlay","addSheet");
 };
 
+function resetFilterToAll(){
+  filter = "all";
+  document.querySelectorAll(".seg").forEach(b=>b.classList.toggle("active", b.dataset.filter==="all"));
+}
 $("addBtn").onclick = async ()=>{
   const title=$("title").value.trim();
   if(!title){ toast("اكتب عنوان المهمة أولًا"); return; }
@@ -627,8 +641,13 @@ $("addBtn").onclick = async ()=>{
   if(editingId){ tasks=tasks.filter(t=>t.id!==editingId); }
   const task = { id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())), title, note:$("note").value.trim(), due, priority:pickedPriority, category:pickedCategory, done:false, pushId:null, createdAt:new Date().toISOString() };
   tasks.push(task);
+  resetFilterToAll();
   save(); render(); scheduleAll(); closeSheet("addOverlay","addSheet"); toast(editingId?"تم تحديث المهمة":"تمت إضافة المهمة");
-  if(due){ const id = await schedulePush(task); if(id){ task.pushId=id; save(); render(); } }
+  if(due){
+    const id = await schedulePush(task);
+    if(id){ task.pushId=id; save(); render(); }
+    else if(CONFIG.REST_API_KEY) toast("⚠️ تذكير محلي فقط — لم تُجدول إشعار حقيقي، افتح فحص الإشعارات");
+  }
 };
 $("quickHalf").onclick=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d); };
 $("quickHour").onclick=()=>{ const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); splitSet(d); };
