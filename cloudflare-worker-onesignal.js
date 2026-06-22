@@ -16,7 +16,7 @@ export default {
         const notificationId = body.notificationId;
         if (!notificationId) return json({ ok: false, error: "Missing notificationId" }, 400);
 
-        const cancelUrl = `https://api.onesignal.com/notifications/${notificationId}?app_id=${env.ONESIGNAL_APP_ID}`;
+        const cancelUrl = `https://api.onesignal.com/notifications/${encodeURIComponent(notificationId)}?app_id=${encodeURIComponent(env.ONESIGNAL_APP_ID)}`;
         const response = await fetch(cancelUrl, {
           method: "DELETE",
           headers: { "Authorization": `Key ${env.ONESIGNAL_REST_API_KEY}` }
@@ -44,16 +44,14 @@ export default {
         },
         priority: 10,
         ios_sound: "default",
-        ios_interruption_level: "time-sensitive",
         ios_badgeType: "Increase",
         ios_badgeCount: 1,
         android_sound: "default",
         android_visibility: 1
       };
 
-      if (body.sendAfter) {
-        payload.send_after = body.sendAfter;
-      }
+      if (body.url) payload.url = body.url;
+      if (body.sendAfter) payload.send_after = body.sendAfter;
 
       const response = await fetch("https://api.onesignal.com/notifications", {
         method: "POST",

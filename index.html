@@ -232,6 +232,9 @@
     .sheetHead h2{font-size:17px;margin:0;font-weight:900}
     .closeX{width:36px;height:36px;border-radius:11px;border:1px solid var(--hairline);background:var(--glass-soft);color:var(--text);font-size:16px}
     .form{display:grid;gap:11px}
+    .fieldLabel{font-size:12px;color:var(--muted);font-weight:900;margin:2px 2px -4px}
+    .actionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .statsBox{border:1px solid var(--hairline);background:rgba(255,255,255,.03);border-radius:var(--r-md);padding:12px;line-height:1.9;color:var(--muted);font-size:13px}
 
     .toast{
       position:fixed;right:16px;left:16px;bottom:calc(96px + env(safe-area-inset-bottom));
@@ -294,7 +297,7 @@
     <div class="listTitle"><span class="dot"></span> مهامك</div>
     <div id="tasks"></div>
 
-    <div class="footer">نسخة v11 — هيكل جديد، إشعارات أقوى عبر OneSignal</div>
+    <div class="footer">نسخة v12 — تكرار، تنبيه قبل الموعد، اختبار إشعار، وتحسينات iPhone</div>
   </div>
 
   <button class="fab" id="fabAdd">+</button>
@@ -311,6 +314,22 @@
         <input id="dueDate" type="date" aria-label="تاريخ المهمة">
         <input id="dueTime" type="time" step="60" aria-label="وقت المهمة">
       </div>
+      <div class="row2">
+        <select id="remindBefore" aria-label="وقت التنبيه">
+          <option value="0">في وقت المهمة</option>
+          <option value="5">قبل 5 دقائق</option>
+          <option value="15">قبل 15 دقيقة</option>
+          <option value="30">قبل 30 دقيقة</option>
+          <option value="60">قبل ساعة</option>
+          <option value="1440">قبل يوم</option>
+        </select>
+        <select id="repeatRule" aria-label="التكرار">
+          <option value="none">بدون تكرار</option>
+          <option value="daily">يوميًا</option>
+          <option value="weekly">أسبوعيًا</option>
+          <option value="monthly">شهريًا</option>
+        </select>
+      </div>
       <div class="chips" id="priorityChips">
         <button class="chip high" data-val="high">عالية</button>
         <button class="chip med" data-val="med">متوسطة</button>
@@ -324,12 +343,13 @@
         <button class="chip cat" data-val="محاسبة">محاسبة</button>
       </div>
       <div class="quicks">
+        <button class="smallBtn" id="quickFive">بعد 5 دقائق</button>
         <button class="smallBtn" id="quickHalf">بعد 30 دقيقة</button>
         <button class="smallBtn" id="quickHour">بعد ساعة</button>
         <button class="smallBtn" id="quickEvening">8 مساءً</button>
       </div>
       <button class="primary" id="addBtn">إضافة المهمة</button>
-      <div class="notice">إذا حدّدت وقتًا وكانت الإشعارات مفعّلة، سيصلك تذكير قوي حتى لو الشاشة مقفلة أو التطبيق مغلق.</div>
+      <div class="notice">يمكنك اختيار تنبيه قبل الموعد أو تكرار يومي/أسبوعي. الإشعار الحقيقي يصل عبر OneSignal حتى لو الشاشة مقفلة.</div>
     </div>
   </div>
 
@@ -342,7 +362,7 @@
     <p class="notice" style="margin-top:10px">عند التفعيل، تصل التذكيرات كصوت وبانر بارز بالأعلى ويتجاوز وضع التركيز (Focus) على الآيفون. الاهتزاز نفسه يتبع إعدادات النظام لأن آبل لا تسمح لمواقع الويب بتخصيصه.</p>
     <details class="diag">
       <summary>تفاصيل تقنية / فحص الإشعارات</summary>
-      <button class="smallBtn" id="diagnoseBtn" type="button" style="margin-top:8px">فحص الإشعارات</button>
+      <div class="actionRow" style="margin-top:8px"><button class="smallBtn" id="diagnoseBtn" type="button">فحص الإشعارات</button><button class="smallBtn" id="testPushBtn" type="button">إرسال اختبار الآن</button></div>
       <div id="pushStatus">افتح التطبيق من أيقونة الشاشة الرئيسية، ثم اضغط زر التفعيل أعلاه.</div>
     </details>
   </div>
@@ -353,9 +373,11 @@
     <div class="sheetHandle"></div>
     <div class="sheetHead"><h2>أدوات</h2><button class="closeX" id="toolsClose">×</button></div>
     <div class="form">
+      <div class="statsBox" id="statsBox">الإحصائيات تظهر هنا بعد فتح الأدوات.</div>
       <button class="smallBtn" id="exportBtn">تصدير نسخة JSON</button>
       <button class="smallBtn" id="importBtn">استيراد نسخة JSON</button>
       <button class="smallBtn danger" id="clearDone">حذف المهام المنجزة</button>
+      <button class="smallBtn danger" id="clearAll">حذف كل المهام</button>
       <input id="importFile" type="file" accept="application/json" hidden>
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه (LocalStorage) وتعمل بدون إنترنت بعد أول فتح.</p>
     </div>
@@ -373,6 +395,7 @@ let pickedPriority = "low";
 let pickedCategory = "عام";
 let timers = {};
 let subscriptionId = null;
+function normalizeTasks(){ tasks = tasks.map(t=>({ notifyBefore:0, repeat:"none", completedAt:null, ...t })); save(); }
 
 // === إعدادات الإشعارات عبر Cloudflare Worker ===
 // لا يوجد REST API Key داخل التطبيق الآن. المفتاح محفوظ داخل Cloudflare فقط.
@@ -397,6 +420,10 @@ function buildDue(){
 function isToday(iso){ if(!iso) return false; const d=new Date(iso), n=new Date(); return d.getFullYear()==n.getFullYear()&&d.getMonth()==n.getMonth()&&d.getDate()==n.getDate(); }
 function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); return d.toLocaleString("ar-JO",{weekday:"short",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}); }
 function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
+function repeatText(r){ return r==="daily"?"يتكرر يوميًا":r==="weekly"?"يتكرر أسبوعيًا":r==="monthly"?"يتكرر شهريًا":"بدون تكرار"; }
+function reminderTime(iso, beforeMin=0){ const d=new Date(iso); d.setMinutes(d.getMinutes()-Number(beforeMin||0)); return d; }
+function nextDue(iso, repeat){ const d=new Date(iso); if(repeat==="daily") d.setDate(d.getDate()+1); else if(repeat==="weekly") d.setDate(d.getDate()+7); else if(repeat==="monthly") d.setMonth(d.getMonth()+1); else return ""; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function updateStatsBox(){ const box=$("statsBox"); if(!box) return; const open=tasks.filter(t=>!t.done).length, done=tasks.filter(t=>t.done).length, withPush=tasks.filter(t=>t.pushId).length, reps=tasks.filter(t=>t.repeat&&t.repeat!=="none").length; box.innerHTML=`المجموع: <b>${tasks.length}</b><br>المتبقية: <b>${open}</b> — المنجزة: <b>${done}</b><br>إشعارات مجدولة: <b>${withPush}</b><br>مهام متكررة: <b>${reps}</b>`; }
 
 /* ===== Sheets ===== */
 function openSheet(overlayId, sheetId){ $(overlayId).classList.add("show"); $(sheetId).classList.add("show"); }
@@ -408,14 +435,14 @@ function wireSheet(overlayId, sheetId, openBtnId, closeBtnId, onOpen){
 }
 function resetAddForm(){
   editingId = null; $("addSheetTitle").textContent = "مهمة جديدة";
-  $("title").value=""; $("note").value=""; $("dueDate").value=""; $("dueTime").value="";
+  $("title").value=""; $("note").value=""; $("dueDate").value=""; $("dueTime").value=""; $("remindBefore").value="0"; $("repeatRule").value="none";
   pickedPriority="low"; pickedCategory="عام";
   document.querySelectorAll("#priorityChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val==="low"));
   document.querySelectorAll("#categoryChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val==="عام"));
 }
 wireSheet("addOverlay","addSheet","fabAdd","addClose", resetAddForm);
 wireSheet("notifyOverlay","notifySheet","notifyBtn","notifyClose");
-wireSheet("toolsOverlay","toolsSheet","toolsBtn","toolsClose");
+wireSheet("toolsOverlay","toolsSheet","toolsBtn","toolsClose", updateStatsBox);
 
 document.querySelectorAll("#priorityChips .chip").forEach(c=>c.onclick=()=>{
   document.querySelectorAll("#priorityChips .chip").forEach(x=>x.classList.remove("active"));
@@ -503,6 +530,17 @@ async function requestNotify(){
   }catch(e){ addPushLine("خطأ أثناء طلب الإشعارات: "+e.message); }
   setHeaderIcon(); setPushBtnState();
 }
+async function sendTestPush(){
+  if(!subscriptionId){ await diagnosePush(); }
+  if(!subscriptionId){ toast("فعّل الإشعارات أولًا"); return; }
+  clearPushStatus("إرسال إشعار اختبار...");
+  try{
+    const res = await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"schedule",subscriptionId,title:"اختبار الإشعارات",message:"إذا وصلتك هذه الرسالة فالنظام يعمل بنجاح ✅",url:location.origin+location.pathname})});
+    const data = await res.json();
+    addPushLine("رد الاختبار: "+JSON.stringify(data));
+    toast(data.ok?"تم إرسال اختبار الإشعار":"فشل اختبار الإشعار");
+  }catch(e){ addPushLine("خطأ اختبار Worker: "+e.message); }
+}
 async function schedulePush(task){
   if(!task.due) return null;
   if(!subscriptionId){
@@ -512,7 +550,7 @@ async function schedulePush(task){
     }catch(e){}
   }
   if(!subscriptionId){ addPushLine("لم تُجدول مهمة \""+task.title+"\": لا يوجد Subscription ID بعد (افتح فحص الإشعارات للتأكد من التفعيل)."); return null; }
-  const when = new Date(task.due);
+  const when = reminderTime(task.due, task.notifyBefore || 0);
   if(isNaN(when.getTime()) || when.getTime()<=Date.now()) return null;
   try{
     const res = await fetch(CONFIG.WORKER_URL, {
@@ -521,8 +559,9 @@ async function schedulePush(task){
       body: JSON.stringify({
         action: "schedule",
         subscriptionId: subscriptionId,
-        title: "تذكير مهمة",
-        message: task.title,
+        title: (task.notifyBefore && Number(task.notifyBefore)>0) ? "تذكير قبل الموعد" : "تذكير مهمة",
+        message: (task.notifyBefore && Number(task.notifyBefore)>0) ? `${task.title} — موعدها بعد ${task.notifyBefore} دقيقة` : task.title,
+        url: location.origin + location.pathname + "#task-" + encodeURIComponent(task.id),
         sendAfter: when.toISOString()
       })
     });
@@ -595,13 +634,15 @@ function render(){
   const box=$("tasks");
   if(!list.length){ box.innerHTML = `<div class="empty"><div class="big">📋</div>لا توجد مهام هنا الآن.<br>اضغط على + بالأسفل لإضافة مهمة جديدة.</div>`; return; }
   box.innerHTML = list.map((t,i)=>`
-    <div class="task ${t.priority} ${t.done?'done':''}" data-id="${t.id}" style="animation-delay:${Math.min(i*35,350)}ms">
+    <div class="task ${t.priority} ${t.done?'done':''}" id="task-${escapeHtml(t.id)}" data-id="${t.id}" style="animation-delay:${Math.min(i*35,350)}ms">
       <div class="check" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
       <div class="content">
         <div class="title">${escapeHtml(t.title)}</div>
         ${t.note?`<div class="notice">${escapeHtml(t.note)}</div>`:""}
         <div class="meta">
           <span class="pill">${fmt(t.due)}</span>
+          ${t.notifyBefore?`<span class="pill push">⏱ قبل ${t.notifyBefore}د</span>`:""}
+          ${t.repeat && t.repeat!=="none"?`<span class="pill push">↻ ${repeatText(t.repeat)}</span>`:""}
           <span class="pill ${t.priority}">أولوية ${priText(t.priority)}</span>
           <span class="pill">${escapeHtml(t.category)}</span>
           ${t.pushId?`<span class="pill push">🔔 مجدولة</span>`:""}
@@ -609,18 +650,37 @@ function render(){
       </div>
       <div class="actions">
         <button class="mini" onclick="editTask('${t.id}')">✎</button>
+        <button class="mini" onclick="duplicateTask('${t.id}')">＋</button>
         <button class="mini danger" onclick="deleteTask('${t.id}')">×</button>
       </div>
     </div>`).join("");
 }
 
-window.toggleTask=(id)=>{ const t=tasks.find(x=>x.id===id); if(!t) return; t.done=!t.done; if(t.done && t.pushId){ cancelPush(t); t.pushId=null; } save(); render(); scheduleAll(); };
-window.deleteTask=(id)=>{ const t=tasks.find(x=>x.id===id); if(t?.pushId) cancelPush(t); tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); };
+window.toggleTask=async (id)=>{
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  t.done=!t.done;
+  if(t.done){
+    t.completedAt=new Date().toISOString();
+    if(t.pushId){ cancelPush(t); t.pushId=null; }
+    if(t.repeat && t.repeat!=="none" && t.due){
+      const nd=nextDue(t.due,t.repeat);
+      if(nd){
+        const nextTask={...t,id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+1)),done:false,completedAt:null,due:nd,pushId:null,createdAt:new Date().toISOString()};
+        tasks.push(nextTask);
+        const nid=await schedulePush(nextTask); if(nid){ nextTask.pushId=nid; }
+        toast("تم إنشاء الموعد القادم تلقائيًا");
+      }
+    }
+  }
+  save(); render(); scheduleAll();
+};
+window.deleteTask=(id)=>{ if(!confirm("حذف هذه المهمة؟")) return; const t=tasks.find(x=>x.id===id); if(t?.pushId) cancelPush(t); tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); };
+window.duplicateTask=(id)=>{ const t=tasks.find(x=>x.id===id); if(!t) return; const d={...t,id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title:t.title+" (نسخة)",done:false,completedAt:null,pushId:null,createdAt:new Date().toISOString()}; tasks.push(d); save(); render(); scheduleAll(); toast("تم نسخ المهمة"); };
 window.editTask=(id)=>{
   const t=tasks.find(x=>x.id===id); if(!t) return;
   if(t.pushId) cancelPush(t);
   editingId=id; $("addSheetTitle").textContent="تعديل المهمة";
-  $("title").value=t.title; $("note").value=t.note||""; $("dueDate").value=dateFromIso(t.due); $("dueTime").value=timeFromIso(t.due);
+  $("title").value=t.title; $("note").value=t.note||""; $("dueDate").value=dateFromIso(t.due); $("dueTime").value=timeFromIso(t.due); $("remindBefore").value=String(t.notifyBefore||0); $("repeatRule").value=t.repeat||"none";
   pickedPriority=t.priority; pickedCategory=t.category;
   document.querySelectorAll("#priorityChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val===t.priority));
   document.querySelectorAll("#categoryChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val===t.category));
@@ -637,7 +697,7 @@ $("addBtn").onclick = async ()=>{
   const due = buildDue();
   if(due===false) return;
   if(editingId){ tasks=tasks.filter(t=>t.id!==editingId); }
-  const task = { id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())), title, note:$("note").value.trim(), due, priority:pickedPriority, category:pickedCategory, done:false, pushId:null, createdAt:new Date().toISOString() };
+  const task = { id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())), title, note:$("note").value.trim(), due, priority:pickedPriority, category:pickedCategory, notifyBefore:Number($("remindBefore").value||0), repeat:$("repeatRule").value||"none", done:false, pushId:null, completedAt:null, createdAt:new Date().toISOString() };
   tasks.push(task);
   resetFilterToAll();
   save(); render(); scheduleAll(); closeSheet("addOverlay","addSheet"); toast(editingId?"تم تحديث المهمة":"تمت إضافة المهمة");
@@ -647,10 +707,12 @@ $("addBtn").onclick = async ()=>{
     else toast("⚠️ تذكير محلي فقط — لم تُجدول إشعار حقيقي، افتح فحص الإشعارات");
   }
 };
+$("quickFive").onclick=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()+5); d.setSeconds(0,0); splitSet(d); };
 $("quickHalf").onclick=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d); };
 $("quickHour").onclick=()=>{ const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); splitSet(d); };
 $("quickEvening").onclick=()=>{ const d=new Date(); d.setHours(20,0,0,0); if(d.getTime()<=Date.now()) toast("8 مساءً مرّت اليوم، اختر وقتًا آخر"); splitSet(d); };
 $("diagnoseBtn").onclick=diagnosePush;
+$("testPushBtn").onclick=sendTestPush;
 $("pushBtn").onclick=requestNotify;
 $("search").oninput=render;
 document.querySelectorAll(".seg").forEach(btn=>btn.onclick=()=>{
@@ -659,7 +721,12 @@ document.querySelectorAll(".seg").forEach(btn=>btn.onclick=()=>{
 $("clearDone").onclick=()=>{
   const before=tasks.length;
   tasks.filter(t=>t.done && t.pushId).forEach(cancelPush);
-  tasks=tasks.filter(t=>!t.done); save(); render(); scheduleAll(); toast(`تم حذف ${before-tasks.length} مهمة منجزة`);
+  tasks=tasks.filter(t=>!t.done); save(); render(); scheduleAll(); updateStatsBox(); toast(`تم حذف ${before-tasks.length} مهمة منجزة`);
+};
+$("clearAll").onclick=()=>{
+  if(!confirm("سيتم حذف كل المهام. هل أنت متأكد؟")) return;
+  tasks.filter(t=>t.pushId).forEach(cancelPush);
+  tasks=[]; save(); render(); scheduleAll(); updateStatsBox(); toast("تم حذف كل المهام");
 };
 $("exportBtn").onclick=()=>{
   const blob=new Blob([JSON.stringify(tasks,null,2)],{type:"application/json"});
@@ -669,7 +736,7 @@ $("importBtn").onclick=()=>$("importFile").click();
 $("importFile").onchange=(e)=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{ try{ const data=JSON.parse(reader.result); if(Array.isArray(data)){ tasks=data; save(); render(); scheduleAll(); toast("تم الاستيراد"); } }catch(err){ toast("ملف غير صالح"); } };
+  reader.onload=()=>{ try{ const data=JSON.parse(reader.result); if(Array.isArray(data)){ tasks=data; normalizeTasks(); render(); scheduleAll(); updateStatsBox(); toast("تم الاستيراد"); } }catch(err){ toast("ملف غير صالح"); } };
   reader.readAsText(file);
 };
 
@@ -679,7 +746,7 @@ async function init(){
   const h=now.getHours();
   $("greetTitle").textContent = h<12 ? "صباح الخير 👋" : (h<18 ? "أهلًا بك 👋" : "مساء الخير 👋");
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("/iphone_tasks_pwa_demo/OneSignalSDKWorker.js", { scope:"/iphone_tasks_pwa_demo/" }); }
-  setHeaderIcon(); render(); scheduleAll();
+  normalizeTasks(); setHeaderIcon(); render(); scheduleAll();
   try{ const OneSignal = await getOneSignal(9000); if(OneSignal.User?.PushSubscription){ subscriptionId = OneSignal.User.PushSubscription.id || null; } }
   catch(e){}
   setPushBtnState();
