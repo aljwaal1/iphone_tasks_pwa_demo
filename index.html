@@ -94,7 +94,7 @@
         <input id="title" placeholder="اكتب المهمة هنا">
         <textarea id="note" placeholder="ملاحظة اختيارية"></textarea>
         <div class="row">
-          <input id="due" type="datetime-local">
+          <input id="due" type="datetime-local" aria-label="تاريخ ووقت المهمة">
           <select id="priority">
             <option value="low">أولوية عادية</option>
             <option value="med">أولوية متوسطة</option>
@@ -109,9 +109,12 @@
             <option value="منزل">منزل</option>
             <option value="محاسبة">محاسبة</option>
           </select>
-          <button class="smallBtn" id="quickTomorrow">موعد غدًا 9 صباحًا</button>
+          <button class="smallBtn" id="quickHour">بعد ساعة</button>
+          <button class="smallBtn" id="quickToday">اليوم 8 مساءً</button>
+          <button class="smallBtn" id="quickTomorrow">غدًا 9 صباحًا</button>
         </div>
         <button class="primary" id="addBtn">إضافة المهمة</button>
+        <div class="notice">اختر التاريخ والوقت حسب حاجتك: اليوم، بعد ساعة، غدًا، أو اتركه فارغًا إذا كانت المهمة بدون تذكير.</div>
         <div class="notice">الإشعارات تعمل بشكل ممتاز أثناء فتح التطبيق أو وجوده قريبًا في الخلفية. الإشعارات القوية بعد إغلاق التطبيق تمامًا تحتاج مرحلة Web Push لاحقًا.</div>
       </div>
     </section>
@@ -138,7 +141,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة تجريبية مطورة — PWA للآيفون</div>
+    <div class="footer">نسخة مطورة v3 — اختيار وقت المهمة</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -231,6 +234,14 @@ $("addBtn").onclick = ()=>{
   tasks.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, note:$("note").value.trim(), due:$("due").value, priority:$("priority").value, category:$("category").value, done:false, createdAt:new Date().toISOString()});
   $("title").value=""; $("note").value=""; $("due").value="";
   save(); render(); scheduleAll(); toast("تمت إضافة المهمة");
+}
+$("quickHour").onclick = ()=>{
+  const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); $("due").value=localValue(d);
+}
+$("quickToday").onclick = ()=>{
+  const d=new Date(); d.setHours(20,0,0,0);
+  if(d.getTime() <= Date.now()) d.setHours(d.getHours()+1);
+  $("due").value=localValue(d);
 }
 $("quickTomorrow").onclick = ()=>{
   const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0); $("due").value=localValue(d);
