@@ -141,9 +141,9 @@
       border:1px solid var(--hairline);background:rgba(255,255,255,.035);color:var(--muted);
       border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;transition:.16s var(--ease);
     }
-    .chip.active.high{background:rgba(255,107,125,.18);border-color:rgba(255,107,125,.5);color:#ffd6dc}
-    .chip.active.med{background:rgba(240,196,104,.18);border-color:rgba(240,196,104,.5);color:#ffe9bb}
-    .chip.active.low{background:rgba(43,217,196,.18);border-color:rgba(43,217,196,.5);color:#cffff4}
+    .chip.active.high{background:#ff7a8c;border-color:#ff7a8c;color:#2a0509}
+    .chip.active.med{background:#ffcf6b;border-color:#ffcf6b;color:#2a1c02}
+    .chip.active.low{background:#33ecd1;border-color:#33ecd1;color:#02201c}
     .chip.cat.active{background:rgba(168,190,255,.14);border-color:rgba(168,190,255,.4);color:#e6ecff}
 
     .quicks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -180,10 +180,10 @@
       animation:taskIn .4s var(--ease) both;
     }
     @keyframes taskIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .task::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:5px;border-radius:4px;background:var(--bar)}
-    .task.high{--bar:linear-gradient(var(--rose),#c44156);background:linear-gradient(120deg,rgba(255,122,140,.16),rgba(255,122,140,.04));border-color:rgba(255,122,140,.30)}
-    .task.med{--bar:linear-gradient(var(--gold),var(--gold-deep));background:linear-gradient(120deg,rgba(255,207,107,.16),rgba(255,207,107,.04));border-color:rgba(255,207,107,.30)}
-    .task.low{--bar:linear-gradient(var(--teal),var(--teal-deep));background:linear-gradient(120deg,rgba(51,236,209,.14),rgba(51,236,209,.03));border-color:rgba(51,236,209,.28)}
+    .task::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:6px;border-radius:4px;background:var(--bar)}
+    .task.high{--bar:linear-gradient(var(--rose),#c44156);background:linear-gradient(120deg,rgba(255,122,140,.30),rgba(255,122,140,.08));border-color:rgba(255,122,140,.45)}
+    .task.med{--bar:linear-gradient(var(--gold),var(--gold-deep));background:linear-gradient(120deg,rgba(255,207,107,.30),rgba(255,207,107,.08));border-color:rgba(255,207,107,.45)}
+    .task.low{--bar:linear-gradient(var(--teal),var(--teal-deep));background:linear-gradient(120deg,rgba(51,236,209,.26),rgba(51,236,209,.06));border-color:rgba(51,236,209,.40)}
     .task:active{transform:scale(.99)}
     .task.done{opacity:.55}
     .check{
@@ -192,14 +192,14 @@
     }
     .done .check{background:linear-gradient(135deg,#6df3df,var(--teal));border-color:var(--teal);color:#04150f}
     .content{flex:1;min-width:0}
-    .title{font-weight:800;font-size:15.5px;margin-bottom:5px;word-break:break-word}
+    .title{font-weight:800;font-size:17px;margin-bottom:5px;word-break:break-word}
     .done .title{text-decoration:line-through;color:var(--muted)}
-    .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:11px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:12.5px}
     .pill{background:rgba(255,255,255,.05);border:1px solid var(--hairline);padding:4px 9px;border-radius:999px}
     .pill.push{border-color:rgba(51,236,209,.55);color:#bdfff0}
-    .pill.high{border-color:rgba(255,122,140,.5);color:#ffd6dc}
-    .pill.med{border-color:rgba(255,207,107,.5);color:#ffe9bb}
-    .pill.low{border-color:rgba(51,236,209,.5);color:#c9fff3}
+    .pill.high{background:#ff7a8c;border-color:#ff7a8c;color:#2a0509;font-weight:900}
+    .pill.med{background:#ffcf6b;border-color:#ffcf6b;color:#2a1c02;font-weight:900}
+    .pill.low{background:#33ecd1;border-color:#33ecd1;color:#02201c;font-weight:900}
     .actions{display:flex;flex-direction:column;gap:6px}
     .mini{border:1px solid var(--hairline);border-radius:11px;padding:8px 10px;background:rgba(255,255,255,.03);color:var(--text);font-weight:900;transition:.15s}
     .mini:active{transform:scale(.9)}
@@ -297,7 +297,7 @@
     <div class="listTitle"><span class="dot"></span> مهامك</div>
     <div id="tasks"></div>
 
-    <div class="footer">نسخة v12 — تكرار، تنبيه قبل الموعد، اختبار إشعار، وتحسينات iPhone</div>
+    <div class="footer">نسخة v13 — تذكير يومي 10 صباحًا، ألوان أولوية أوضح، تكرار، تنبيه قبل الموعد</div>
   </div>
 
   <button class="fab" id="fabAdd">+</button>
@@ -359,7 +359,7 @@
     <div class="sheetHandle"></div>
     <div class="sheetHead"><h2>إشعارات قفل الشاشة</h2><button class="closeX" id="notifyClose">×</button></div>
     <button class="primary gold" id="pushBtn" type="button">تفعيل إشعارات قفل الشاشة</button>
-    <p class="notice" style="margin-top:10px">عند التفعيل، تصل التذكيرات كصوت وبانر بارز بالأعلى ويتجاوز وضع التركيز (Focus) على الآيفون. الاهتزاز نفسه يتبع إعدادات النظام لأن آبل لا تسمح لمواقع الويب بتخصيصه.</p>
+    <p class="notice" style="margin-top:10px">عند التفعيل، تصل التذكيرات كصوت وبانر بارز بالأعلى ويتجاوز وضع التركيز (Focus) على الآيفون. الاهتزاز نفسه يتبع إعدادات النظام لأن آبل لا تسمح لمواقع الويب بتخصيصه.<br><br>🔔 تذكير يومي تلقائي الساعة 10 صباحًا بعدد مهامك غير المنجزة، يتحدّث كل مرة تفتح التطبيق.</p>
     <details class="diag">
       <summary>تفاصيل تقنية / فحص الإشعارات</summary>
       <div class="actionRow" style="margin-top:8px"><button class="smallBtn" id="diagnoseBtn" type="button">فحص الإشعارات</button><button class="smallBtn" id="testPushBtn" type="button">إرسال اختبار الآن</button></div>
@@ -525,7 +525,7 @@ async function requestNotify(){
       const optedIn = !!OneSignal.User.PushSubscription.optedIn;
       addPushLine("Subscription ID: " + (subscriptionId||"غير موجود بعد"));
       addPushLine("Opted In: " + (optedIn?"نعم":"لا"));
-      if(subscriptionId || optedIn){ toast("تم تفعيل الإشعارات"); scheduleAllPush(); } else { toast("لم يكتمل الاشتراك"); }
+      if(subscriptionId || optedIn){ toast("تم تفعيل الإشعارات"); scheduleAllPush(); scheduleDailyDigest(); } else { toast("لم يكتمل الاشتراك"); }
     }
   }catch(e){ addPushLine("خطأ أثناء طلب الإشعارات: "+e.message); }
   setHeaderIcon(); setPushBtnState();
@@ -572,22 +572,64 @@ async function schedulePush(task){
     return null;
   }catch(e){ addPushLine("خطأ Worker عند جدولة الإشعار: "+e.message); return null; }
 }
-async function cancelPush(task){
-  if(!task?.pushId) return;
+async function cancelPushById(pushId){
+  if(!pushId) return;
   try{
     await fetch(CONFIG.WORKER_URL, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ action:"cancel", notificationId: task.pushId })
+      body: JSON.stringify({ action:"cancel", notificationId: pushId })
     });
   }
   catch(e){}
+}
+async function cancelPush(task){
+  if(!task?.pushId) return;
+  await cancelPushById(task.pushId);
 }
 async function scheduleAllPush(){
   if(!subscriptionId) return;
   for(const task of tasks){
     if(!task.done && task.due && !task.pushId){ const id = await schedulePush(task); if(id){ task.pushId=id; save(); render(); } }
   }
+}
+
+/* ===== تذكير يومي ثابت بالمهام غير المنجزة (الساعة 10 صباحًا) ===== */
+const DAILY_DIGEST_HOUR = 10;
+const digestStoreKey = "iphone_tasks_daily_digest_v1";
+function loadDigestIds(){ try{ return JSON.parse(localStorage.getItem(digestStoreKey) || "[]"); } catch(e){ return []; } }
+function saveDigestIds(ids){ localStorage.setItem(digestStoreKey, JSON.stringify(ids)); }
+function digestDateAt(dayOffset){ const d=new Date(); d.setDate(d.getDate()+dayOffset); d.setHours(DAILY_DIGEST_HOUR,0,0,0); return d; }
+
+async function scheduleDailyDigest(){
+  if(!subscriptionId) return;
+  // إلغاء كل تذكيرات اليوميات القديمة المجدولة سابقًا قبل إعادة الجدولة
+  const old = loadDigestIds();
+  for(const item of old){ await cancelPushById(item.pushId); }
+  saveDigestIds([]);
+
+  const openCount = tasks.filter(t=>!t.done).length;
+  const now = Date.now();
+  const fresh = [];
+  for(let i=0; i<7; i++){
+    const when = digestDateAt(i);
+    if(when.getTime() <= now) continue; // الساعة 10 اليوم فاتت بالفعل
+    const isNearest = fresh.length === 0;
+    if(isNearest && openCount === 0) continue; // لا يوجد ما يستدعي تذكير الآن، تجاوز أقرب موعد فقط
+    const message = (isNearest && openCount > 0)
+      ? `لديك ${openCount} ${openCount===1?'مهمة واحدة':'مهام'} لم تُنجز بعد، تحقق منها 👀`
+      : "🔔 تحقّق من مهامك غير المنجزة اليوم";
+    try{
+      const res = await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        action:"schedule", subscriptionId, title:"📋 تذكير يومي بالمهام",
+        message, url: location.origin + location.pathname, sendAfter: when.toISOString()
+      })});
+      const data = await res.json();
+      const id = (data && data.ok && (data.id || data.data?.id)) || null;
+      if(id) fresh.push({date: localDateValue(when), pushId: id});
+    }catch(e){}
+  }
+  saveDigestIds(fresh);
 }
 function notify(title, body){
   if("Notification" in window && Notification.permission==="granted"){
@@ -750,6 +792,7 @@ async function init(){
   try{ const OneSignal = await getOneSignal(9000); if(OneSignal.User?.PushSubscription){ subscriptionId = OneSignal.User.PushSubscription.id || null; } }
   catch(e){}
   setPushBtnState();
+  if(subscriptionId) scheduleDailyDigest();
 }
 init();
 </script>
