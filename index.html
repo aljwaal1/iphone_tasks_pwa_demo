@@ -18,7 +18,7 @@
       await OneSignal.init({
         appId: "d810c491-89a1-41af-bea5-5719bd01b2a8",
         safari_web_id: "web.onesignal.auto.18427476-d96c-4d38-9e88-40d33a9d693d",
-        serviceWorkerPath: "sw.js",
+        serviceWorkerPath: "OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/iphone_tasks_pwa_demo/" },
         notifyButton: {
           enable: true,
@@ -111,7 +111,7 @@
         <h1>مهامي اليومية</h1>
         <p id="todayText">تطبيق مهام للآيفون PWA</p>
       </div>
-      <button class="iconBtn" id="notifyBtn">🔔</button>
+      <button class="iconBtn" id="notifyBtn" title="تفعيل إشعارات القفل">🔔</button>
     </header>
 
     <div class="grid">
@@ -149,7 +149,8 @@
         </div>
         <button class="primary" id="addBtn">إضافة المهمة</button>
         <div class="notice">اكتب وقت المهمة بالساعة والدقيقة لأي موعد خلال اليوم. إذا اخترت وقتًا فقط، سيضع التطبيق تاريخ اليوم تلقائيًا.</div>
-        <div class="notice">تم ربط التطبيق بـ OneSignal Web Push. بعد تفعيل الإذن من أيقونة الجرس العائمة يمكنك اختبار وصول إشعار من لوحة OneSignal حتى والشاشة مغلقة.</div>
+        <button class="primary" id="pushBtn" type="button">تفعيل إشعارات قفل الشاشة</button>
+        <div class="notice" id="pushStatus">افتح التطبيق من أيقونة الشاشة الرئيسية على الآيفون، ثم اضغط الزر أعلاه لتفعيل إشعارات OneSignal.</div>
       </div>
     </section>
 
@@ -175,7 +176,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة مطورة v5 — OneSignal Web Push</div>
+    <div class="footer">نسخة مطورة v6 — إصلاح زر OneSignal</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -206,20 +207,56 @@ function isToday(iso){ if(!iso) return false; const d=new Date(iso), n=new Date(
 function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); return d.toLocaleString("ar-JO",{weekday:"short",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}); }
 function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
 
-function requestNotify(){
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function setPushStatus(msg){
+  const el = $("pushStatus");
+  if(el) el.textContent = msg;
+}
+async function requestNotify(){
+  if(!isStandalone()){
+    const msg = "على الآيفون: افتح التطبيق من الأيقونة على الشاشة الرئيسية، وليس من Safari، ثم اضغط التفعيل.";
+    setPushStatus(msg); toast(msg); return;
+  }
   if(window.OneSignalDeferred){
     window.OneSignalDeferred.push(async function(OneSignal){
       try{
-        await OneSignal.Notifications.requestPermission();
-        toast("تم طلب تفعيل إشعارات OneSignal");
+        if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported && !OneSignal.Notifications.isPushSupported()){
+          const msg = "هذا الجهاز أو المتصفح لا يدعم Web Push هنا. تأكد أن iOS 16.4 أو أحدث وأن التطبيق من الشاشة الرئيسية.";
+          setPushStatus(msg); toast("Web Push غير مدعوم هنا"); return;
+        }
+        setPushStatus("جاري طلب إذن الإشعارات...");
+        if(OneSignal.Slidedown && OneSignal.Slidedown.promptPush){
+          try { await OneSignal.Slidedown.promptPush({force:true}); } catch(e) {}
+        }
+        if(OneSignal.Notifications && OneSignal.Notifications.requestPermission){
+          await OneSignal.Notifications.requestPermission();
+        }
+        setTimeout(()=>{
+          const id = OneSignal.User && OneSignal.User.PushSubscription ? OneSignal.User.PushSubscription.id : "";
+          const optedIn = OneSignal.User && OneSignal.User.PushSubscription ? OneSignal.User.PushSubscription.optedIn : false;
+          if(id || optedIn){
+            setPushStatus("تم الاشتراك في OneSignal. الآن جرّب إرسال إشعار من لوحة OneSignal.");
+            toast("تم تفعيل OneSignal");
+          } else {
+            setPushStatus("إذا ظهر طلب السماح اختر Allow. إذا لم يظهر، ادخل إعدادات الآيفون وتأكد أن إشعارات التطبيق غير محظورة.");
+            toast("راجع رسالة السماح");
+          }
+        }, 1500);
       }catch(e){
-        toast("اضغط جرس OneSignal العائم لتفعيل الإشعارات");
+        console.log(e);
+        setPushStatus("لم يظهر طلب السماح. افتح التطبيق من أيقونة الشاشة الرئيسية، ثم جرّب مرة أخرى.");
+        toast("لم يستجب طلب الإذن");
       }
     });
     return;
   }
   if(!("Notification" in window)){ toast("هذا المتصفح لا يدعم الإشعارات"); return; }
-  Notification.requestPermission().then(p => toast(p==="granted" ? "تم تفعيل الإشعارات" : "لم يتم السماح بالإشعارات"));
+  Notification.requestPermission().then(p => {
+    const msg = p==="granted" ? "تم تفعيل الإشعارات المحلية" : "لم يتم السماح بالإشعارات";
+    setPushStatus(msg); toast(msg);
+  });
 }
 function notify(title, body){
   if("Notification" in window && Notification.permission==="granted"){
@@ -306,6 +343,7 @@ $("quickEvening").onclick = ()=>{
   splitSet(d);
 }
 $("notifyBtn").onclick = requestNotify;
+$("pushBtn").onclick = requestNotify;
 $("search").oninput = render;
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
   document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
@@ -327,7 +365,7 @@ $("importFile").onchange=(e)=>{
 }
 function init(){
   $("todayText").textContent = new Date().toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js"); }
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("OneSignalSDKWorker.js"); }
   render(); scheduleAll();
 }
 init();
