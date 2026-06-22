@@ -150,6 +150,7 @@
         <button class="primary" id="addBtn">إضافة المهمة</button>
         <div class="notice">اكتب وقت المهمة بالساعة والدقيقة لأي موعد خلال اليوم. إذا اخترت وقتًا فقط، سيضع التطبيق تاريخ اليوم تلقائيًا.</div>
         <button class="primary" id="pushBtn" type="button">تفعيل إشعارات قفل الشاشة</button>
+        <button class="smallBtn" id="diagnoseBtn" type="button">فحص الإشعارات</button>
         <div class="notice" id="pushStatus">افتح التطبيق من أيقونة الشاشة الرئيسية على الآيفون، ثم اضغط الزر أعلاه لتفعيل إشعارات OneSignal.</div>
       </div>
     </section>
@@ -176,7 +177,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة مطورة v6 — إصلاح زر OneSignal</div>
+    <div class="footer">نسخة مطورة v7 — فحص OneSignal</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -214,49 +215,119 @@ function setPushStatus(msg){
   const el = $("pushStatus");
   if(el) el.textContent = msg;
 }
-async function requestNotify(){
-  if(!isStandalone()){
-    const msg = "على الآيفون: افتح التطبيق من الأيقونة على الشاشة الرئيسية، وليس من Safari، ثم اضغط التفعيل.";
-    setPushStatus(msg); toast(msg); return;
+function addPushLine(msg){
+  const el = $("pushStatus");
+  if(!el) return;
+  const old = el.innerHTML ? el.innerHTML + "<br>" : "";
+  el.innerHTML = old + "• " + msg;
+}
+function clearPushStatus(msg){
+  const el = $("pushStatus");
+  if(el) el.innerHTML = msg ? "• " + msg : "";
+}
+function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+async function withTimeout(promise, ms, timeoutMsg){
+  let t;
+  const timeout = new Promise((_, rej)=>{ t=setTimeout(()=>rej(new Error(timeoutMsg||"timeout")), ms); });
+  try { return await Promise.race([promise, timeout]); }
+  finally { clearTimeout(t); }
+}
+async function getOneSignal(timeoutMs=9000){
+  return await withTimeout(new Promise((resolve, reject)=>{
+    if(!window.OneSignalDeferred){ reject(new Error("لم يتم إنشاء OneSignalDeferred")); return; }
+    window.OneSignalDeferred.push(function(OneSignal){ resolve(OneSignal); });
+  }), timeoutMs, "انتهت مهلة تحميل OneSignal");
+}
+async function diagnosePush(){
+  clearPushStatus("بدأ الفحص...");
+  addPushLine(isStandalone() ? "التطبيق مفتوح من الأيقونة: نعم" : "التطبيق مفتوح من Safari: لا يصلح للآيفون Push");
+  addPushLine(location.protocol === "https:" ? "HTTPS: نعم" : "HTTPS: لا");
+  addPushLine("Notification API: " + (("Notification" in window) ? "موجود" : "غير موجود"));
+  if("Notification" in window) addPushLine("حالة إذن الآيفون: " + Notification.permission);
+  addPushLine("Service Worker: " + (("serviceWorker" in navigator) ? "موجود" : "غير موجود"));
+  if("serviceWorker" in navigator){
+    try{
+      const reg = await withTimeout(navigator.serviceWorker.getRegistration(), 5000, "تعذر فحص Service Worker");
+      addPushLine(reg ? ("Service Worker مسجل: " + (reg.active ? "نشط" : "غير نشط")) : "لا يوجد Service Worker مسجل");
+    }catch(e){ addPushLine("مشكلة Service Worker: " + e.message); }
   }
-  if(window.OneSignalDeferred){
-    window.OneSignalDeferred.push(async function(OneSignal){
-      try{
-        if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported && !OneSignal.Notifications.isPushSupported()){
-          const msg = "هذا الجهاز أو المتصفح لا يدعم Web Push هنا. تأكد أن iOS 16.4 أو أحدث وأن التطبيق من الشاشة الرئيسية.";
-          setPushStatus(msg); toast("Web Push غير مدعوم هنا"); return;
-        }
-        setPushStatus("جاري طلب إذن الإشعارات...");
-        if(OneSignal.Slidedown && OneSignal.Slidedown.promptPush){
-          try { await OneSignal.Slidedown.promptPush({force:true}); } catch(e) {}
-        }
-        if(OneSignal.Notifications && OneSignal.Notifications.requestPermission){
-          await OneSignal.Notifications.requestPermission();
-        }
-        setTimeout(()=>{
-          const id = OneSignal.User && OneSignal.User.PushSubscription ? OneSignal.User.PushSubscription.id : "";
-          const optedIn = OneSignal.User && OneSignal.User.PushSubscription ? OneSignal.User.PushSubscription.optedIn : false;
-          if(id || optedIn){
-            setPushStatus("تم الاشتراك في OneSignal. الآن جرّب إرسال إشعار من لوحة OneSignal.");
-            toast("تم تفعيل OneSignal");
-          } else {
-            setPushStatus("إذا ظهر طلب السماح اختر Allow. إذا لم يظهر، ادخل إعدادات الآيفون وتأكد أن إشعارات التطبيق غير محظورة.");
-            toast("راجع رسالة السماح");
-          }
-        }, 1500);
-      }catch(e){
-        console.log(e);
-        setPushStatus("لم يظهر طلب السماح. افتح التطبيق من أيقونة الشاشة الرئيسية، ثم جرّب مرة أخرى.");
-        toast("لم يستجب طلب الإذن");
-      }
-    });
+  try{
+    const OneSignal = await getOneSignal(9000);
+    addPushLine("OneSignal SDK: تم تحميله");
+    if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported){
+      let supported = OneSignal.Notifications.isPushSupported();
+      addPushLine("دعم Web Push: " + (supported ? "نعم" : "لا"));
+    }
+    if(OneSignal.User && OneSignal.User.PushSubscription){
+      addPushLine("Subscription ID: " + (OneSignal.User.PushSubscription.id || "غير موجود بعد"));
+      addPushLine("Opted In: " + (OneSignal.User.PushSubscription.optedIn ? "نعم" : "لا"));
+    }
+  }catch(e){
+    addPushLine("OneSignal لم يكتمل: " + e.message);
+  }
+}
+async function requestNotify(){
+  clearPushStatus("جاري تجهيز طلب الإشعارات...");
+  if(!isStandalone()){
+    addPushLine("افتح التطبيق من الأيقونة على الشاشة الرئيسية، وليس Safari.");
+    toast("افتحه من الأيقونة");
     return;
   }
-  if(!("Notification" in window)){ toast("هذا المتصفح لا يدعم الإشعارات"); return; }
-  Notification.requestPermission().then(p => {
-    const msg = p==="granted" ? "تم تفعيل الإشعارات المحلية" : "لم يتم السماح بالإشعارات";
-    setPushStatus(msg); toast(msg);
-  });
+  if(!("Notification" in window)){
+    addPushLine("هذا المتصفح لا يدعم Notification API.");
+    toast("الإشعارات غير مدعومة");
+    return;
+  }
+  addPushLine("حالة الإذن الحالية: " + Notification.permission);
+  if(Notification.permission === "denied"){
+    addPushLine("الإشعارات محظورة. احذف أيقونة التطبيق ثم أضفها من Safari من جديد، أو فعّلها من Settings > Notifications إن ظهرت.");
+    toast("الإشعارات محظورة");
+    return;
+  }
+  let OneSignal;
+  try{
+    addPushLine("تحميل OneSignal...");
+    OneSignal = await getOneSignal(12000);
+    addPushLine("OneSignal جاهز");
+  }catch(e){
+    addPushLine("تعذر تحميل OneSignal: " + e.message);
+    addPushLine("تأكد أن الإنترنت شغال، وأن ملف OneSignalSDKWorker.js مرفوع بجانب index.html.");
+    toast("OneSignal غير جاهز");
+    return;
+  }
+  try{
+    if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported && !OneSignal.Notifications.isPushSupported()){
+      addPushLine("هذا الجهاز لا يدعم Web Push هنا. يلزم iOS 16.4 أو أحدث + التطبيق من الشاشة الرئيسية.");
+      toast("Web Push غير مدعوم");
+      return;
+    }
+    addPushLine("سيظهر طلب السماح الآن إن لم يكن ظهر سابقًا...");
+    let result = null;
+    if(OneSignal.Notifications && OneSignal.Notifications.requestPermission){
+      try { result = await withTimeout(OneSignal.Notifications.requestPermission(), 12000, "طلب السماح لم يرجع نتيجة خلال 12 ثانية"); }
+      catch(e){ addPushLine("ملاحظة: " + e.message); }
+    } else if("Notification" in window){
+      result = await withTimeout(Notification.requestPermission(), 12000, "طلب السماح المحلي لم يرجع نتيجة");
+    }
+    await wait(1200);
+    addPushLine("حالة الإذن بعد الطلب: " + Notification.permission);
+    if(OneSignal.User && OneSignal.User.PushSubscription){
+      const id = OneSignal.User.PushSubscription.id || "";
+      const optedIn = !!OneSignal.User.PushSubscription.optedIn;
+      addPushLine("Subscription ID: " + (id || "غير موجود بعد"));
+      addPushLine("Opted In: " + (optedIn ? "نعم" : "لا"));
+      if(id || optedIn){
+        toast("تم تفعيل OneSignal");
+        addPushLine("اذهب إلى OneSignal > Audience > Subscriptions للتأكد من ظهور الجهاز.");
+      } else {
+        toast("لم يكتمل الاشتراك");
+        addPushLine("إذا لم تظهر نافذة السماح، اضغط فحص الإشعارات وأرسل لي النتيجة الظاهرة هنا.");
+      }
+    }
+  }catch(e){
+    addPushLine("خطأ أثناء طلب الإشعارات: " + e.message);
+    toast("فشل طلب الإذن");
+  }
 }
 function notify(title, body){
   if("Notification" in window && Notification.permission==="granted"){
@@ -344,6 +415,7 @@ $("quickEvening").onclick = ()=>{
 }
 $("notifyBtn").onclick = requestNotify;
 $("pushBtn").onclick = requestNotify;
+$("diagnoseBtn").onclick = diagnosePush;
 $("search").oninput = render;
 document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
   document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
