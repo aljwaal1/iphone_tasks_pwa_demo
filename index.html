@@ -1,121 +1,266 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="مهامي" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <title>مهامي - PWA</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12372a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مهامي">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>مهامي اليومية</title>
   <style>
-    :root{--bg:#0f172a;--card:#111c35;--muted:#94a3b8;--text:#f8fafc;--line:#26334f;--accent:#38bdf8;--ok:#22c55e;--danger:#fb7185;--warn:#f59e0b}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:linear-gradient(180deg,#0f172a,#111827);color:var(--text);min-height:100vh}
-    .wrap{max-width:760px;margin:auto;padding:18px 14px 90px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 18px}.brand h1{margin:0;font-size:28px}.brand p{margin:5px 0 0;color:var(--muted);font-size:14px}.badge{background:#082f49;border:1px solid #075985;color:#bae6fd;padding:8px 12px;border-radius:999px;font-size:13px}.card{background:rgba(17,28,53,.92);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 15px 40px rgba(0,0,0,.22);margin-bottom:14px}.row{display:grid;grid-template-columns:1fr;gap:10px} input,textarea,select,button{font:inherit;border-radius:14px;border:1px solid var(--line);padding:12px;background:#0b1223;color:var(--text);outline:none}textarea{min-height:80px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--accent)}button{cursor:pointer;background:#0ea5e9;border-color:#0284c7;font-weight:700}button.secondary{background:#172033;border-color:#334155;color:#e2e8f0}button.danger{background:#be123c;border-color:#9f1239}button.ok{background:#16a34a;border-color:#15803d}.actions{display:flex;gap:8px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{text-align:center;background:#0b1223;border:1px solid var(--line);border-radius:18px;padding:12px}.stat b{display:block;font-size:22px}.stat span{color:var(--muted);font-size:13px}.task{display:grid;gap:10px;border:1px solid var(--line);border-radius:18px;padding:13px;background:#0b1223;margin-top:10px}.task.done{opacity:.62}.task-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.title{font-size:17px;font-weight:800}.meta{color:var(--muted);font-size:13px;line-height:1.6}.pill{font-size:12px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}.high{background:#451a03;color:#fed7aa;border-color:#9a3412}.mid{background:#172554;color:#bfdbfe;border-color:#1d4ed8}.low{background:#052e16;color:#bbf7d0;border-color:#166534}.empty{text-align:center;color:var(--muted);padding:25px}.footer{position:fixed;left:0;right:0;bottom:0;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px}.footer .inner{max-width:760px;margin:auto;display:flex;gap:8px}.footer button{flex:1}.note{font-size:13px;color:var(--muted);line-height:1.7}.install{display:none}.small{font-size:12px;color:var(--muted)}
+    :root{
+      --bg:#0f211b; --card:#16352b; --card2:#1e4639; --text:#f4fff8; --muted:#a9c9b8;
+      --line:rgba(255,255,255,.12); --accent:#54d18f; --accent2:#ffd166; --danger:#ff6b6b;
+      --shadow:0 14px 34px rgba(0,0,0,.26); --radius:22px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
+      color:var(--text);background:
+        radial-gradient(circle at top right, rgba(84,209,143,.18), transparent 34%),
+        linear-gradient(180deg,#0d1d18 0%,#10261e 52%,#08130f 100%);
+      min-height:100vh;padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+    }
+    .wrap{max-width:720px;margin:0 auto;padding-bottom:28px}
+    header{padding:18px 2px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand h1{font-size:30px;margin:0 0 5px;font-weight:900;letter-spacing:-.5px}
+    .brand p{margin:0;color:var(--muted);font-size:14px}
+    .iconBtn,.smallBtn,.primary{
+      border:0;border-radius:16px;background:rgba(255,255,255,.09);color:var(--text);
+      padding:12px 14px;font-weight:800;box-shadow:none
+    }
+    .primary{background:linear-gradient(135deg,#4ed98e,#22b86e);color:#062113;width:100%;font-size:17px;padding:15px;border-radius:18px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+    .stat{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:18px;padding:13px;text-align:center}
+    .stat b{display:block;font-size:24px;margin-bottom:4px}
+    .stat span{color:var(--muted);font-size:12px}
+    .card{background:rgba(22,53,43,.88);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 0;backdrop-filter:blur(10px)}
+    .form{display:grid;gap:10px}
+    input,select,textarea{
+      width:100%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text);
+      border-radius:16px;padding:13px;font-size:16px;outline:none
+    }
+    textarea{min-height:72px;resize:vertical}
+    input::placeholder,textarea::placeholder{color:#8fb7a3}
+    option{color:#111}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .tabs{display:flex;gap:8px;overflow:auto;padding:4px 0;margin:6px 0 10px}
+    .tab{white-space:nowrap;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--muted);border-radius:999px;padding:10px 13px;font-weight:800}
+    .tab.active{background:rgba(84,209,143,.22);color:var(--text);border-color:rgba(84,209,143,.55)}
+    .task{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:18px;padding:12px;margin:10px 0}
+    .check{width:28px;height:28px;min-width:28px;border-radius:9px;border:2px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:900}
+    .done .check{background:var(--accent);border-color:var(--accent);color:#062113}
+    .content{flex:1;min-width:0}
+    .title{font-weight:900;font-size:17px;margin-bottom:5px;word-break:break-word}
+    .done .title{text-decoration:line-through;color:#b5cabe}
+    .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:12px}
+    .pill{background:rgba(255,255,255,.08);border:1px solid var(--line);padding:5px 8px;border-radius:999px}
+    .high{color:#ffd1d1;border-color:rgba(255,107,107,.45)}
+    .med{color:#ffe9a6;border-color:rgba(255,209,102,.45)}
+    .low{color:#bdffd7;border-color:rgba(84,209,143,.45)}
+    .actions{display:flex;gap:6px;align-items:center}
+    .mini{border:0;border-radius:12px;padding:9px 10px;background:rgba(255,255,255,.08);color:var(--text);font-weight:900}
+    .danger{color:#ffd5d5}
+    .empty{text-align:center;color:var(--muted);padding:24px 8px;line-height:1.8}
+    .toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    .notice{font-size:13px;color:var(--muted);line-height:1.7}
+    .toast{position:fixed;right:14px;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));background:#f7fff9;color:#0b2419;border-radius:18px;padding:14px;text-align:center;font-weight:900;box-shadow:var(--shadow);transform:translateY(120px);transition:.25s}
+    .toast.show{transform:translateY(0)}
+    .footer{color:var(--muted);text-align:center;font-size:12px;margin-top:18px}
+    @media(max-width:430px){.row{grid-template-columns:1fr}.brand h1{font-size:26px}.grid{gap:8px}.stat{padding:11px 6px}}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="brand"><h1>مهامي</h1><p>تطبيق مهام يعمل على الآيفون كـ PWA</p></div>
-      <div class="badge" id="status">جاهز</div>
-    </div>
-
-    <div class="card install" id="iosHelp">
-      <b>طريقة التثبيت على الآيفون:</b>
-      <div class="note">افتح الرابط من Safari ثم اضغط مشاركة ثم <b>Add to Home Screen</b> حتى يظهر التطبيق كأيقونة.</div>
-    </div>
-
-    <div class="card">
-      <div class="stats">
-        <div class="stat"><b id="total">0</b><span>الكل</span></div>
-        <div class="stat"><b id="pending">0</b><span>غير منجز</span></div>
-        <div class="stat"><b id="done">0</b><span>منجز</span></div>
+    <header>
+      <div class="brand">
+        <h1>مهامي اليومية</h1>
+        <p id="todayText">تطبيق مهام للآيفون PWA</p>
       </div>
+      <button class="iconBtn" id="notifyBtn">🔔</button>
+    </header>
+
+    <div class="grid">
+      <div class="stat"><b id="countAll">0</b><span>كل المهام</span></div>
+      <div class="stat"><b id="countToday">0</b><span>اليوم</span></div>
+      <div class="stat"><b id="countDone">0</b><span>منجزة</span></div>
     </div>
 
-    <div class="card">
-      <h3 style="margin-top:0">إضافة مهمة</h3>
-      <div class="row">
-        <input id="title" placeholder="عنوان المهمة" />
-        <textarea id="details" placeholder="ملاحظات اختيارية"></textarea>
-        <input id="due" type="datetime-local" />
-        <select id="priority">
-          <option value="mid">أولوية متوسطة</option>
-          <option value="high">أولوية عالية</option>
-          <option value="low">أولوية منخفضة</option>
-        </select>
-        <div class="actions">
-          <button onclick="addTask()">حفظ المهمة</button>
-          <button class="secondary" onclick="requestNotify()">تفعيل الإشعارات</button>
+    <section class="card">
+      <div class="form">
+        <input id="title" placeholder="اكتب المهمة هنا">
+        <textarea id="note" placeholder="ملاحظة اختيارية"></textarea>
+        <div class="row">
+          <input id="due" type="datetime-local">
+          <select id="priority">
+            <option value="low">أولوية عادية</option>
+            <option value="med">أولوية متوسطة</option>
+            <option value="high">أولوية عالية</option>
+          </select>
         </div>
-        <div class="note">ملاحظة مهمة: إشعارات PWA على الآيفون تحتاج أن تضيف التطبيق إلى الشاشة الرئيسية. التذكير المحلي هنا يعمل أثناء فتح التطبيق، أما الإشعارات الحقيقية وهو مغلق فتحتاج خادم Web Push لاحقًا.</div>
+        <div class="row">
+          <select id="category">
+            <option value="عام">عام</option>
+            <option value="عمل">عمل</option>
+            <option value="دراسة">دراسة</option>
+            <option value="منزل">منزل</option>
+            <option value="محاسبة">محاسبة</option>
+          </select>
+          <button class="smallBtn" id="quickTomorrow">موعد غدًا 9 صباحًا</button>
+        </div>
+        <button class="primary" id="addBtn">إضافة المهمة</button>
+        <div class="notice">الإشعارات تعمل بشكل ممتاز أثناء فتح التطبيق أو وجوده قريبًا في الخلفية. الإشعارات القوية بعد إغلاق التطبيق تمامًا تحتاج مرحلة Web Push لاحقًا.</div>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <div class="actions" style="justify-content:space-between;align-items:center">
-        <h3 style="margin:0">قائمة المهام</h3>
-        <select id="filter" onchange="render()" style="max-width:180px">
-          <option value="all">كل المهام</option>
-          <option value="pending">غير المنجزة</option>
-          <option value="done">المنجزة</option>
-        </select>
+    <section class="card">
+      <div class="toolbar">
+        <input id="search" placeholder="بحث في المهام">
+        <button class="smallBtn" id="exportBtn">تصدير</button>
       </div>
-      <div id="list"></div>
-    </div>
-  </div>
+      <div class="tabs">
+        <button class="tab active" data-filter="all">الكل</button>
+        <button class="tab" data-filter="today">اليوم</button>
+        <button class="tab" data-filter="open">غير منجزة</button>
+        <button class="tab" data-filter="done">منجزة</button>
+        <button class="tab" data-filter="high">عالية</button>
+      </div>
+      <div id="tasks"></div>
+    </section>
 
-  <div class="footer">
-    <div class="inner">
-      <button class="secondary" onclick="exportData()">نسخ احتياطي</button>
-      <button class="secondary" onclick="importData()">استرجاع</button>
-      <button class="danger" onclick="clearDone()">حذف المنجز</button>
-    </div>
+    <section class="card">
+      <button class="smallBtn" id="clearDone">حذف المنجز</button>
+      <button class="smallBtn" id="importBtn">استيراد نسخة</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+      <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
+    </section>
+
+    <div class="footer">نسخة تجريبية مطورة — PWA للآيفون</div>
   </div>
+  <div class="toast" id="toast"></div>
 
 <script>
-const KEY='pwa_tasks_v1';
-let tasks = JSON.parse(localStorage.getItem(KEY) || '[]');
-function save(){localStorage.setItem(KEY, JSON.stringify(tasks)); render();}
-function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-function fmt(dt){if(!dt)return 'بدون موعد'; try{return new Date(dt).toLocaleString('ar-JO',{dateStyle:'medium',timeStyle:'short'});}catch(e){return dt}}
-function addTask(){
-  const title=document.getElementById('title').value.trim();
-  if(!title){alert('اكتب عنوان المهمة');return;}
-  tasks.unshift({id:Date.now(),title,details:document.getElementById('details').value.trim(),due:document.getElementById('due').value,priority:document.getElementById('priority').value,done:false,created:new Date().toISOString(),notified:false});
-  document.getElementById('title').value='';document.getElementById('details').value='';document.getElementById('due').value='';
-  save(); scheduleChecks();
+const $ = (id)=>document.getElementById(id);
+const storeKey = "iphone_tasks_pwa_pro_v2";
+let tasks = JSON.parse(localStorage.getItem(storeKey) || "[]");
+let filter = "all";
+let timers = {};
+
+function save(){ localStorage.setItem(storeKey, JSON.stringify(tasks)); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function pad(n){return String(n).padStart(2,"0")}
+function localValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function isToday(iso){ if(!iso) return false; const d=new Date(iso), n=new Date(); return d.getFullYear()==n.getFullYear()&&d.getMonth()==n.getMonth()&&d.getDate()==n.getDate(); }
+function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); return d.toLocaleString("ar-JO",{weekday:"short",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}); }
+function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
+
+function requestNotify(){
+  if(!("Notification" in window)){ toast("هذا المتصفح لا يدعم الإشعارات"); return; }
+  Notification.requestPermission().then(p => toast(p==="granted" ? "تم تفعيل الإشعارات" : "لم يتم السماح بالإشعارات"));
 }
-function toggle(id){tasks=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);save()}
-function del(id){if(confirm('حذف المهمة؟')){tasks=tasks.filter(t=>t.id!==id);save()}}
+function notify(title, body){
+  if("Notification" in window && Notification.permission==="granted"){
+    try{ navigator.serviceWorker?.ready.then(reg=>reg.showNotification(title,{body,icon:"icon-192.png",badge:"icon-192.png"})); }
+    catch(e){ new Notification(title,{body}); }
+  } else {
+    toast(title + " — " + body);
+  }
+}
+function scheduleAll(){
+  Object.values(timers).forEach(clearTimeout); timers={};
+  const now=Date.now();
+  tasks.forEach(task=>{
+    if(task.done || !task.due) return;
+    const time = new Date(task.due).getTime();
+    const diff = time - now;
+    if(diff > 0 && diff < 2147483647){
+      timers[task.id] = setTimeout(()=>notify("تذكير مهمة", task.title), diff);
+    }
+  });
+}
+
 function render(){
-  const f=document.getElementById('filter').value; const list=document.getElementById('list');
-  const filtered=tasks.filter(t=>f==='all'||(f==='done'?t.done:!t.done));
-  document.getElementById('total').textContent=tasks.length; document.getElementById('pending').textContent=tasks.filter(t=>!t.done).length; document.getElementById('done').textContent=tasks.filter(t=>t.done).length;
-  if(!filtered.length){list.innerHTML='<div class="empty">لا توجد مهام هنا</div>';return;}
-  list.innerHTML=filtered.map(t=>`<div class="task ${t.done?'done':''}"><div class="task-head"><div><div class="title">${esc(t.title)}</div><div class="meta">${esc(t.details)}</div><div class="meta">الموعد: ${fmt(t.due)}</div></div><span class="pill ${t.priority}">${t.priority==='high'?'عالية':t.priority==='low'?'منخفضة':'متوسطة'}</span></div><div class="actions"><button class="ok" onclick="toggle(${t.id})">${t.done?'إلغاء الإنجاز':'تم الإنجاز'}</button><button class="danger" onclick="del(${t.id})">حذف</button></div></div>`).join('');
+  const q=$("search").value.trim().toLowerCase();
+  let list = tasks.filter(t => {
+    if(q && !(t.title+" "+(t.note||"")+" "+t.category).toLowerCase().includes(q)) return false;
+    if(filter==="today") return isToday(t.due);
+    if(filter==="open") return !t.done;
+    if(filter==="done") return t.done;
+    if(filter==="high") return t.priority==="high";
+    return true;
+  }).sort((a,b)=>(a.done-b.done) || ((a.due||"9999").localeCompare(b.due||"9999")));
+  $("countAll").textContent = tasks.length;
+  $("countToday").textContent = tasks.filter(t=>isToday(t.due)&&!t.done).length;
+  $("countDone").textContent = tasks.filter(t=>t.done).length;
+  const box=$("tasks");
+  if(!list.length){ box.innerHTML = `<div class="empty">لا توجد مهام هنا الآن.<br>أضف مهمة جديدة من الأعلى.</div>`; return; }
+  box.innerHTML = list.map(t=>`
+    <div class="task ${t.done?'done':''}" data-id="${t.id}">
+      <div class="check" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
+      <div class="content">
+        <div class="title">${escapeHtml(t.title)}</div>
+        ${t.note?`<div class="notice">${escapeHtml(t.note)}</div>`:""}
+        <div class="meta">
+          <span class="pill">${fmt(t.due)}</span>
+          <span class="pill ${t.priority}">أولوية ${priText(t.priority)}</span>
+          <span class="pill">${escapeHtml(t.category)}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="mini" onclick="editTask('${t.id}')">✎</button>
+        <button class="mini danger" onclick="deleteTask('${t.id}')">×</button>
+      </div>
+    </div>`).join("");
 }
-async function requestNotify(){
-  if(!('Notification' in window)){alert('هذا المتصفح لا يدعم الإشعارات');return;}
-  const p=await Notification.requestPermission();
-  document.getElementById('status').textContent=p==='granted'?'الإشعارات مفعلة':'الإشعارات غير مفعلة';
-  if(p==='granted') new Notification('مهامي',{body:'تم تفعيل الإشعارات التجريبية'});
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+window.toggleTask = (id)=>{ const t=tasks.find(x=>x.id===id); if(t){t.done=!t.done; save(); render(); scheduleAll();} }
+window.deleteTask = (id)=>{ tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); }
+window.editTask = (id)=>{
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  $("title").value=t.title; $("note").value=t.note||""; $("due").value=t.due||""; $("priority").value=t.priority; $("category").value=t.category;
+  tasks=tasks.filter(x=>x.id!==id); save(); render(); scheduleAll(); toast("عدّل البيانات ثم اضغط إضافة");
 }
-function scheduleChecks(){setInterval(checkDue,30000); checkDue();}
-function checkDue(){
-  if(!('Notification' in window) || Notification.permission!=='granted') return;
-  const now=Date.now(); let changed=false;
-  tasks.forEach(t=>{ if(!t.done && t.due && !t.notified && new Date(t.due).getTime()<=now){ new Notification('تذكير مهمة',{body:t.title}); t.notified=true; changed=true; }});
-  if(changed) localStorage.setItem(KEY, JSON.stringify(tasks));
+
+$("addBtn").onclick = ()=>{
+  const title=$("title").value.trim();
+  if(!title){ toast("اكتب عنوان المهمة أولًا"); return; }
+  tasks.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, note:$("note").value.trim(), due:$("due").value, priority:$("priority").value, category:$("category").value, done:false, createdAt:new Date().toISOString()});
+  $("title").value=""; $("note").value=""; $("due").value="";
+  save(); render(); scheduleAll(); toast("تمت إضافة المهمة");
 }
-function clearDone(){tasks=tasks.filter(t=>!t.done);save()}
-function exportData(){navigator.clipboard.writeText(JSON.stringify(tasks,null,2)).then(()=>alert('تم نسخ النسخة الاحتياطية'))}
-function importData(){const data=prompt('الصق النسخة الاحتياطية هنا'); if(!data)return; try{const arr=JSON.parse(data); if(Array.isArray(arr)){tasks=arr;save();alert('تم الاسترجاع')}}catch(e){alert('البيانات غير صحيحة')}}
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
-if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone){document.getElementById('iosHelp').style.display='block';}
-render(); scheduleChecks();
+$("quickTomorrow").onclick = ()=>{
+  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0); $("due").value=localValue(d);
+}
+$("notifyBtn").onclick = requestNotify;
+$("search").oninput = render;
+document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); filter=btn.dataset.filter; render();
+});
+$("clearDone").onclick=()=>{
+  const before=tasks.length; tasks=tasks.filter(t=>!t.done); save(); render(); scheduleAll(); toast(`تم حذف ${before-tasks.length} مهمة منجزة`);
+}
+$("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify(tasks,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="tasks-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ try{ const data=JSON.parse(reader.result); if(Array.isArray(data)){ tasks=data; save(); render(); scheduleAll(); toast("تم الاستيراد"); } }catch(err){ toast("ملف غير صالح"); } };
+  reader.readAsText(file);
+}
+function init(){
+  $("todayText").textContent = new Date().toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js"); }
+  render(); scheduleAll();
+}
+init();
 </script>
 </body>
 </html>
