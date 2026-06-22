@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#12372a">
+  <meta name="theme-color" content="#05070f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="مهامي">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>مهامي اليومية</title>
-  <!-- OneSignal Web Push SDK -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -21,368 +20,549 @@
         serviceWorkerPath: "/iphone_tasks_pwa_demo/OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/iphone_tasks_pwa_demo/" },
         promptOptions: {
-          slidedown: {
-            prompts: [{
-              type: "push",
-              autoPrompt: false,
-              text: {
-                actionMessage: "هل تريد استقبال تذكيرات المهام حتى عندما تكون الشاشة مغلقة؟",
-                acceptButton: "تفعيل",
-                cancelButton: "لاحقًا"
-              }
-            }]
-          }
+          slidedown: { prompts: [{
+            type: "push", autoPrompt: false,
+            text: {
+              actionMessage: "فعّل إشعارات المهام حتى تصلك التذكيرات والشاشة مقفلة",
+              acceptButton: "تفعيل", cancelButton: "لاحقًا"
+            }
+          }] }
         },
-        notifyButton: {
-          enable: true,
-          size: "medium",
-          position: "bottom-left",
-          prenotify: true,
-          showCredit: false,
-          text: {
-            'tip.state.unsubscribed': 'تفعيل إشعارات مهامي',
-            'tip.state.subscribed': 'الإشعارات مفعلة',
-            'tip.state.blocked': 'الإشعارات محظورة',
-            'message.prenotify': 'اضغط لتفعيل إشعارات المهام',
-            'message.action.subscribed': 'تم تفعيل الإشعارات',
-            'message.action.resubscribed': 'تم تفعيل الإشعارات مرة أخرى',
-            'message.action.unsubscribed': 'تم إيقاف الإشعارات'
-          }
-        }
+        notifyButton: { enable: false }
       });
     });
   </script>
 
   <style>
     :root{
-      --bg:#0f211b; --card:#16352b; --card2:#1e4639; --text:#f4fff8; --muted:#a9c9b8;
-      --line:rgba(255,255,255,.12); --accent:#54d18f; --accent2:#ffd166; --danger:#ff6b6b;
-      --shadow:0 14px 34px rgba(0,0,0,.26); --radius:22px;
+      --bg-0:#04060d; --bg-1:#070a17; --bg-2:#0b0f22; --bg-3:#0a0d1c;
+      --glass:rgba(16,20,40,.58); --glass-soft:rgba(16,20,40,.38); --glass-strong:rgba(20,25,48,.74);
+      --hairline:rgba(168,190,255,.10); --hairline-2:rgba(94,234,212,.26);
+      --top-light:rgba(255,255,255,.07);
+      --text:#f3f6fc; --muted:#8d9bc2; --muted-2:#5e6c91;
+      --teal:#2bd9c4; --teal-deep:#0b8f80; --teal-glow:rgba(43,217,196,.30);
+      --gold:#f0c468; --gold-deep:#b8842c; --gold-glow:rgba(240,196,104,.30);
+      --rose:#ff6b7d; --ok:#3fe091;
+      --r-xl:26px; --r-lg:20px; --r-md:16px; --r-sm:12px;
+      --ease:cubic-bezier(.22,1,.36,1);
+      --shadow-lg:0 26px 60px rgba(0,0,0,.55);
+      --shadow-sm:0 10px 24px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0}
     body{
-      margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
-      color:var(--text);background:
-        radial-gradient(circle at top right, rgba(84,209,143,.18), transparent 34%),
-        linear-gradient(180deg,#0d1d18 0%,#10261e 52%,#08130f 100%);
-      min-height:100vh;padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
+      color:var(--text);min-height:100vh;overflow-x:hidden;
+      background:
+        radial-gradient(700px 460px at 92% -8%, var(--teal-glow), transparent 62%),
+        radial-gradient(620px 420px at -8% 4%, var(--gold-glow), transparent 60%),
+        radial-gradient(900px 700px at 50% 120%, rgba(43,217,196,.08), transparent 60%),
+        linear-gradient(168deg,var(--bg-0) 0%, var(--bg-1) 38%, var(--bg-2) 70%, var(--bg-3) 100%);
+      background-attachment:fixed;
+      padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 100px);
+      animation:bodyIn .55s var(--ease);
     }
-    .wrap{max-width:720px;margin:0 auto;padding-bottom:28px}
-    header{padding:18px 2px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .brand h1{font-size:30px;margin:0 0 5px;font-weight:900;letter-spacing:-.5px}
-    .brand p{margin:0;color:var(--muted);font-size:14px}
-    .iconBtn,.smallBtn,.primary{
-      border:0;border-radius:16px;background:rgba(255,255,255,.09);color:var(--text);
-      padding:12px 14px;font-weight:800;box-shadow:none
+    @keyframes bodyIn{from{opacity:0}to{opacity:1}}
+    .wrap{max-width:720px;margin:0 auto;padding:0 16px}
+
+    /* ===== Header / Hero ===== */
+    .hero{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 2px 8px}
+    .greet h1{
+      margin:0 0 3px;font-size:24px;font-weight:900;letter-spacing:-.3px;
+      background:linear-gradient(95deg,#fff,#cdeaff 50%,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;
     }
-    .primary{background:linear-gradient(135deg,#4ed98e,#22b86e);color:#062113;width:100%;font-size:17px;padding:15px;border-radius:18px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
-    .stat{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:18px;padding:13px;text-align:center}
-    .stat b{display:block;font-size:24px;margin-bottom:4px}
-    .stat span{color:var(--muted);font-size:12px}
-    .card{background:rgba(22,53,43,.88);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 0;backdrop-filter:blur(10px)}
-    .form{display:grid;gap:10px}
+    .greet p{margin:0;color:var(--muted);font-size:13px}
+    .hero-actions{display:flex;gap:8px}
+    .iconBtn{
+      width:44px;height:44px;border-radius:14px;border:1px solid var(--hairline);background:var(--glass-soft);
+      color:var(--text);font-size:18px;display:grid;place-items:center;position:relative;
+      transition:transform .18s var(--ease), border-color .18s, background .18s;
+      box-shadow:inset 0 1px 0 var(--top-light);
+    }
+    .iconBtn:active{transform:scale(.9)}
+    .iconBtn.on{border-color:var(--hairline-2);background:rgba(43,217,196,.15)}
+    .iconBtn.off{border-color:rgba(255,107,125,.35);background:rgba(255,107,125,.10)}
+    .iconBtn .dotbadge{position:absolute;top:7px;left:7px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px var(--bg-1)}
+
+    /* ===== Progress ring card ===== */
+    .ringCard{
+      display:flex;align-items:center;gap:18px;background:var(--glass);border:1px solid var(--hairline);
+      border-radius:var(--r-xl);padding:18px;margin:14px 0;box-shadow:var(--shadow-lg),inset 0 1px 0 var(--top-light);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      animation:cardIn .5s var(--ease) both;
+    }
+    @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .ring{width:78px;height:78px;flex:none;position:relative}
+    .ring svg{width:78px;height:78px;transform:rotate(-90deg)}
+    .ring circle{fill:none;stroke-width:8}
+    .ring .track{stroke:rgba(255,255,255,.08)}
+    .ring .prog{stroke:url(#ringGrad);stroke-linecap:round;transition:stroke-dashoffset .6s var(--ease)}
+    .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:16px}
+    .ringInfo{flex:1;min-width:0}
+    .ringInfo .big{font-size:15.5px;font-weight:900;margin-bottom:6px}
+    .miniStats{display:flex;gap:14px;color:var(--muted);font-size:12px}
+    .miniStats b{color:var(--text);font-size:14px;display:block}
+    .miniStats span{display:block;color:var(--muted)}
+
+    /* ===== Segmented filters ===== */
+    .segWrap{display:flex;gap:6px;overflow:auto;padding:4px 0 2px;margin-bottom:6px;scrollbar-width:none}
+    .segWrap::-webkit-scrollbar{display:none}
+    .seg{
+      white-space:nowrap;border:1px solid var(--hairline);background:var(--glass-soft);color:var(--muted);
+      border-radius:999px;padding:9px 16px;font-weight:800;font-size:13px;transition:.18s var(--ease);
+    }
+    .seg.active{background:linear-gradient(135deg,rgba(43,217,196,.28),rgba(43,217,196,.10));color:#dffff8;border-color:var(--hairline-2);box-shadow:0 0 0 3px rgba(43,217,196,.10)}
+
+    .searchRow{display:flex;gap:8px;margin:10px 0 4px}
+    .searchRow input{flex:1}
+    .toolMini{
+      width:46px;flex:none;border-radius:var(--r-md);border:1px solid var(--hairline);background:var(--glass-soft);
+      color:var(--text);font-size:17px;display:grid;place-items:center;
+    }
+
+    /* ===== Inputs (used inside sheets) ===== */
     input,select,textarea{
-      width:100%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text);
-      border-radius:16px;padding:13px;font-size:16px;outline:none
+      width:100%;border:1px solid var(--hairline);background:rgba(255,255,255,.035);color:var(--text);
+      border-radius:var(--r-md);padding:13px 14px;font-size:16px;outline:none;
+      transition:border-color .18s, background .18s, box-shadow .18s;-webkit-appearance:none;appearance:none;
     }
-    textarea{min-height:72px;resize:vertical}
-    input::placeholder,textarea::placeholder{color:#8fb7a3}
+    select{
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%238d9bc2' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+      background-repeat:no-repeat;background-position:left 14px center;padding-left:34px;
+    }
+    textarea{min-height:60px;resize:vertical}
+    input::placeholder,textarea::placeholder{color:var(--muted-2)}
+    input:focus,select:focus,textarea:focus{border-color:var(--hairline-2);box-shadow:0 0 0 3px rgba(43,217,196,.14);background:rgba(255,255,255,.06)}
     option{color:#111}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .tabs{display:flex;gap:8px;overflow:auto;padding:4px 0;margin:6px 0 10px}
-    .tab{white-space:nowrap;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--muted);border-radius:999px;padding:10px 13px;font-weight:800}
-    .tab.active{background:rgba(84,209,143,.22);color:var(--text);border-color:rgba(84,209,143,.55)}
-    .task{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:18px;padding:12px;margin:10px 0}
-    .check{width:28px;height:28px;min-width:28px;border-radius:9px;border:2px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:900}
-    .done .check{background:var(--accent);border-color:var(--accent);color:#062113}
-    .content{flex:1;min-width:0}
-    .title{font-weight:900;font-size:17px;margin-bottom:5px;word-break:break-word}
-    .done .title{text-decoration:line-through;color:#b5cabe}
-    .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:12px}
-    .pill{background:rgba(255,255,255,.08);border:1px solid var(--line);padding:5px 8px;border-radius:999px}
-    .high{color:#ffd1d1;border-color:rgba(255,107,107,.45)}
-    .med{color:#ffe9a6;border-color:rgba(255,209,102,.45)}
-    .low{color:#bdffd7;border-color:rgba(84,209,143,.45)}
-    .actions{display:flex;gap:6px;align-items:center}
-    .mini{border:0;border-radius:12px;padding:9px 10px;background:rgba(255,255,255,.08);color:var(--text);font-weight:900}
-    .danger{color:#ffd5d5}
-    .empty{text-align:center;color:var(--muted);padding:24px 8px;line-height:1.8}
-    .toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      border:1px solid var(--hairline);background:rgba(255,255,255,.035);color:var(--muted);
+      border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;transition:.16s var(--ease);
+    }
+    .chip.active.high{background:rgba(255,107,125,.18);border-color:rgba(255,107,125,.5);color:#ffd6dc}
+    .chip.active.med{background:rgba(240,196,104,.18);border-color:rgba(240,196,104,.5);color:#ffe9bb}
+    .chip.active.low{background:rgba(43,217,196,.18);border-color:rgba(43,217,196,.5);color:#cffff4}
+    .chip.cat.active{background:rgba(168,190,255,.14);border-color:rgba(168,190,255,.4);color:#e6ecff}
+
     .quicks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .notice{font-size:13px;color:var(--muted);line-height:1.7}
-    .toast{position:fixed;right:14px;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));background:#f7fff9;color:#0b2419;border-radius:18px;padding:14px;text-align:center;font-weight:900;box-shadow:var(--shadow);transform:translateY(120px);transition:.25s}
+    .smallBtn{
+      border:1px solid var(--hairline);border-radius:var(--r-sm);background:rgba(255,255,255,.04);color:var(--text);
+      padding:11px 8px;font-weight:800;font-size:12.5px;transition:transform .15s var(--ease), background .15s;
+    }
+    .smallBtn:active{transform:scale(.95);background:rgba(255,255,255,.09)}
+
+    .primary{
+      border:0;width:100%;font-size:16px;padding:15px;border-radius:var(--r-md);font-weight:900;color:#04150f;
+      background:linear-gradient(135deg,#6df3df,var(--teal) 55%,var(--teal-deep));
+      box-shadow:0 14px 30px rgba(43,217,196,.25);transition:transform .15s var(--ease), filter .15s;
+    }
+    .primary:active{transform:scale(.985)}
+    .primary.gold{color:#241a04;background:linear-gradient(135deg,#fbe3a8,var(--gold) 55%,var(--gold-deep));box-shadow:0 14px 30px rgba(240,196,104,.25)}
+    .primary.gold.subscribed{background:linear-gradient(135deg,#9af6d2,var(--ok) 55%,var(--teal-deep));color:#04150f;box-shadow:0 14px 30px rgba(63,224,145,.25)}
+
+    .notice{font-size:12.5px;color:var(--muted);line-height:1.75}
+    details.diag>summary{list-style:none;cursor:pointer;font-size:13px;font-weight:800;color:var(--teal);display:flex;align-items:center;gap:6px;padding:6px 2px}
+    details.diag>summary::-webkit-details-marker{display:none}
+    details.diag>summary::after{content:"˅";transition:transform .2s}
+    details.diag[open]>summary::after{transform:rotate(180deg)}
+    #pushStatus{background:rgba(255,255,255,.03);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:11px 13px;margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.85;max-height:200px;overflow:auto}
+
+    /* ===== Task list ===== */
+    .listTitle{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:900;font-size:13.5px;margin:16px 2px 8px}
+    .listTitle .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+    .task{
+      position:relative;display:flex;gap:12px;align-items:flex-start;border:1px solid var(--hairline);background:var(--glass-soft);
+      border-radius:var(--r-lg);padding:14px;margin:10px 0;overflow:hidden;
+      box-shadow:var(--shadow-sm),inset 0 1px 0 var(--top-light);
+      transition:transform .2s var(--ease), opacity .2s, border-color .2s;
+      animation:taskIn .4s var(--ease) both;
+    }
+    @keyframes taskIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .task::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:4px;border-radius:4px;background:var(--bar)}
+    .task.high{--bar:linear-gradient(var(--rose),#c44156)}
+    .task.med{--bar:linear-gradient(var(--gold),var(--gold-deep))}
+    .task.low{--bar:linear-gradient(var(--teal),var(--teal-deep))}
+    .task:active{transform:scale(.99)}
+    .task.done{opacity:.55}
+    .check{
+      width:26px;height:26px;min-width:26px;border-radius:9px;border:2px solid rgba(255,255,255,.2);
+      display:grid;place-items:center;font-weight:900;color:transparent;transition:.18s var(--ease);margin-top:1px;
+    }
+    .done .check{background:linear-gradient(135deg,#6df3df,var(--teal));border-color:var(--teal);color:#04150f}
+    .content{flex:1;min-width:0}
+    .title{font-weight:800;font-size:15.5px;margin-bottom:5px;word-break:break-word}
+    .done .title{text-decoration:line-through;color:var(--muted)}
+    .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted);font-size:11px}
+    .pill{background:rgba(255,255,255,.04);border:1px solid var(--hairline);padding:4px 9px;border-radius:999px}
+    .pill.push{border-color:rgba(43,217,196,.5);color:#a9f7ec}
+    .actions{display:flex;flex-direction:column;gap:6px}
+    .mini{border:1px solid var(--hairline);border-radius:11px;padding:8px 10px;background:rgba(255,255,255,.03);color:var(--text);font-weight:900;transition:.15s}
+    .mini:active{transform:scale(.9)}
+    .danger{color:#ffa6ae;border-color:rgba(255,107,125,.3)}
+    .empty{text-align:center;color:var(--muted);padding:40px 8px;line-height:1.9;font-size:14px}
+    .empty .big{font-size:34px;margin-bottom:8px}
+
+    /* ===== FAB ===== */
+    .fab{
+      position:fixed;left:20px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;
+      width:60px;height:60px;border-radius:50%;border:0;font-size:28px;font-weight:900;color:#241a04;
+      background:linear-gradient(135deg,#fbe3a8,var(--gold) 55%,var(--gold-deep));
+      box-shadow:0 16px 34px rgba(240,196,104,.4);display:grid;place-items:center;
+      transition:transform .2s var(--ease);
+    }
+    .fab:active{transform:scale(.88) rotate(90deg)}
+
+    /* ===== Sheets / Modals ===== */
+    .overlay{position:fixed;inset:0;background:rgba(2,4,10,.6);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease);z-index:60}
+    .overlay.show{opacity:1;pointer-events:auto}
+    .sheet{
+      position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;
+      background:linear-gradient(180deg,var(--glass-strong),var(--bg-1));border:1px solid var(--hairline);
+      border-bottom:none;border-radius:26px 26px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));
+      transform:translateY(100%);transition:transform .32s var(--ease);box-shadow:0 -20px 50px rgba(0,0,0,.5);z-index:61;
+    }
+    .sheet.show{transform:translateY(0)}
+    .sheetHandle{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px auto 14px}
+    .sheetHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .sheetHead h2{font-size:17px;margin:0;font-weight:900}
+    .closeX{width:36px;height:36px;border-radius:11px;border:1px solid var(--hairline);background:var(--glass-soft);color:var(--text);font-size:16px}
+    .form{display:grid;gap:11px}
+
+    .toast{
+      position:fixed;right:16px;left:16px;bottom:calc(96px + env(safe-area-inset-bottom));
+      background:linear-gradient(135deg,#f7fff9,#e9fff6);color:#0b2419;border-radius:16px;padding:13px;text-align:center;
+      font-weight:800;box-shadow:var(--shadow-lg);transform:translateY(130px);transition:.3s var(--ease);z-index:70;font-size:13.5px;
+    }
     .toast.show{transform:translateY(0)}
-    .footer{color:var(--muted);text-align:center;font-size:12px;margin-top:18px}
-    @media(max-width:430px){.row{grid-template-columns:1fr}.brand h1{font-size:26px}.grid{gap:8px}.stat{padding:11px 6px}}
+    .footer{color:var(--muted-2);text-align:center;font-size:11px;margin-top:24px}
+    @media(max-width:430px){.row2{grid-template-columns:1fr}.greet h1{font-size:21px}.quicks{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <h1>مهامي اليومية</h1>
-        <p id="todayText">تطبيق مهام للآيفون PWA</p>
-      </div>
-      <button class="iconBtn" id="notifyBtn" title="تفعيل إشعارات القفل">🔔</button>
-    </header>
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6df3df"/>
+        <stop offset="1" stop-color="#0b8f80"/>
+      </linearGradient>
+    </defs>
+  </svg>
 
-    <div class="grid">
-      <div class="stat"><b id="countAll">0</b><span>كل المهام</span></div>
-      <div class="stat"><b id="countToday">0</b><span>اليوم</span></div>
-      <div class="stat"><b id="countDone">0</b><span>منجزة</span></div>
+  <div class="wrap">
+    <div class="hero">
+      <div class="greet">
+        <h1 id="greetTitle">أهلًا بك 👋</h1>
+        <p id="todayText">تطبيق مهام للآيفون</p>
+      </div>
+      <div class="hero-actions">
+        <button class="iconBtn" id="toolsBtn" title="أدوات">⋯</button>
+        <button class="iconBtn" id="notifyBtn" title="الإشعارات">🔔</button>
+      </div>
     </div>
 
-    <section class="card">
-      <div class="form">
-        <input id="title" placeholder="اكتب المهمة هنا">
-        <textarea id="note" placeholder="ملاحظة اختيارية"></textarea>
-        <div class="row">
-          <input id="dueDate" type="date" aria-label="تاريخ المهمة">
-          <input id="dueTime" type="time" step="60" aria-label="وقت المهمة بالساعة والدقيقة">
-        </div>
-        <div class="row">
-          <select id="priority">
-            <option value="low">أولوية عادية</option>
-            <option value="med">أولوية متوسطة</option>
-            <option value="high">أولوية عالية</option>
-          </select>
-          <select id="category">
-            <option value="عام">عام</option>
-            <option value="عمل">عمل</option>
-            <option value="دراسة">دراسة</option>
-            <option value="منزل">منزل</option>
-            <option value="محاسبة">محاسبة</option>
-          </select>
-        </div>
-        <div class="quicks">
-          <button class="smallBtn" id="quickHalf">بعد 30 دقيقة</button>
-          <button class="smallBtn" id="quickHour">بعد ساعة</button>
-          <button class="smallBtn" id="quickEvening">اليوم 8 مساءً</button>
-        </div>
-        <button class="primary" id="addBtn">إضافة المهمة</button>
-        <div class="notice">اكتب وقت المهمة بالساعة والدقيقة لأي موعد خلال اليوم. إذا اخترت وقتًا فقط، سيضع التطبيق تاريخ اليوم تلقائيًا.</div>
-        <button class="primary" id="pushBtn" type="button">تفعيل إشعارات قفل الشاشة</button>
-        <button class="smallBtn" id="diagnoseBtn" type="button">فحص الإشعارات</button>
-        <div class="notice" id="pushStatus">افتح التطبيق من أيقونة الشاشة الرئيسية على الآيفون، ثم اضغط الزر أعلاه لتفعيل إشعارات OneSignal.</div>
+    <div class="ringCard">
+      <div class="ring">
+        <svg viewBox="0 0 78 78"><circle class="track" cx="39" cy="39" r="33"></circle><circle class="prog" id="ringProg" cx="39" cy="39" r="33"></circle></svg>
+        <div class="pct" id="ringPct">0%</div>
       </div>
-    </section>
-
-    <section class="card">
-      <div class="toolbar">
-        <input id="search" placeholder="بحث في المهام">
-        <button class="smallBtn" id="exportBtn">تصدير</button>
+      <div class="ringInfo">
+        <div class="big" id="ringLabel">لا توجد مهام اليوم بعد</div>
+        <div class="miniStats">
+          <div><b id="countToday">0</b><span>اليوم</span></div>
+          <div><b id="countOpen">0</b><span>متبقية</span></div>
+          <div><b id="countDone">0</b><span>منجزة</span></div>
+        </div>
       </div>
-      <div class="tabs">
-        <button class="tab active" data-filter="all">الكل</button>
-        <button class="tab" data-filter="today">اليوم</button>
-        <button class="tab" data-filter="open">غير منجزة</button>
-        <button class="tab" data-filter="done">منجزة</button>
-        <button class="tab" data-filter="high">عالية</button>
-      </div>
-      <div id="tasks"></div>
-    </section>
+    </div>
 
-    <section class="card">
-      <button class="smallBtn" id="clearDone">حذف المنجز</button>
-      <button class="smallBtn" id="importBtn">استيراد نسخة</button>
-      <input id="importFile" type="file" accept="application/json" hidden>
-      <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
-    </section>
+    <div class="segWrap">
+      <button class="seg active" data-filter="all">الكل</button>
+      <button class="seg" data-filter="today">اليوم</button>
+      <button class="seg" data-filter="open">غير منجزة</button>
+      <button class="seg" data-filter="done">منجزة</button>
+      <button class="seg" data-filter="high">عالية</button>
+    </div>
+    <div class="searchRow">
+      <input id="search" placeholder="بحث في المهام">
+    </div>
 
-    <div class="footer">نسخة مطورة v9 — إصلاح مسار GitHub Pages وOneSignal</div>
+    <div class="listTitle"><span class="dot"></span> مهامك</div>
+    <div id="tasks"></div>
+
+    <div class="footer">نسخة v11 — هيكل جديد، إشعارات أقوى عبر OneSignal</div>
   </div>
+
+  <button class="fab" id="fabAdd">+</button>
+
+  <!-- شيت إضافة/تعديل مهمة -->
+  <div class="overlay" id="addOverlay"></div>
+  <div class="sheet" id="addSheet">
+    <div class="sheetHandle"></div>
+    <div class="sheetHead"><h2 id="addSheetTitle">مهمة جديدة</h2><button class="closeX" id="addClose">×</button></div>
+    <div class="form">
+      <input id="title" placeholder="اكتب المهمة هنا">
+      <textarea id="note" placeholder="ملاحظة اختيارية"></textarea>
+      <div class="row2">
+        <input id="dueDate" type="date" aria-label="تاريخ المهمة">
+        <input id="dueTime" type="time" step="60" aria-label="وقت المهمة">
+      </div>
+      <div class="chips" id="priorityChips">
+        <button class="chip high" data-val="high">عالية</button>
+        <button class="chip med" data-val="med">متوسطة</button>
+        <button class="chip low active" data-val="low">عادية</button>
+      </div>
+      <div class="chips" id="categoryChips">
+        <button class="chip cat active" data-val="عام">عام</button>
+        <button class="chip cat" data-val="عمل">عمل</button>
+        <button class="chip cat" data-val="دراسة">دراسة</button>
+        <button class="chip cat" data-val="منزل">منزل</button>
+        <button class="chip cat" data-val="محاسبة">محاسبة</button>
+      </div>
+      <div class="quicks">
+        <button class="smallBtn" id="quickHalf">بعد 30 دقيقة</button>
+        <button class="smallBtn" id="quickHour">بعد ساعة</button>
+        <button class="smallBtn" id="quickEvening">8 مساءً</button>
+      </div>
+      <button class="primary" id="addBtn">إضافة المهمة</button>
+      <div class="notice">إذا حدّدت وقتًا وكانت الإشعارات مفعّلة، سيصلك تذكير قوي حتى لو الشاشة مقفلة أو التطبيق مغلق.</div>
+    </div>
+  </div>
+
+  <!-- شيت الإشعارات -->
+  <div class="overlay" id="notifyOverlay"></div>
+  <div class="sheet" id="notifySheet">
+    <div class="sheetHandle"></div>
+    <div class="sheetHead"><h2>إشعارات قفل الشاشة</h2><button class="closeX" id="notifyClose">×</button></div>
+    <button class="primary gold" id="pushBtn" type="button">تفعيل إشعارات قفل الشاشة</button>
+    <p class="notice" style="margin-top:10px">عند التفعيل، تصل التذكيرات كصوت وبانر بارز بالأعلى ويتجاوز وضع التركيز (Focus) على الآيفون. الاهتزاز نفسه يتبع إعدادات النظام لأن آبل لا تسمح لمواقع الويب بتخصيصه.</p>
+    <details class="diag">
+      <summary>تفاصيل تقنية / فحص الإشعارات</summary>
+      <button class="smallBtn" id="diagnoseBtn" type="button" style="margin-top:8px">فحص الإشعارات</button>
+      <div id="pushStatus">افتح التطبيق من أيقونة الشاشة الرئيسية، ثم اضغط زر التفعيل أعلاه.</div>
+    </details>
+  </div>
+
+  <!-- شيت الأدوات -->
+  <div class="overlay" id="toolsOverlay"></div>
+  <div class="sheet" id="toolsSheet">
+    <div class="sheetHandle"></div>
+    <div class="sheetHead"><h2>أدوات</h2><button class="closeX" id="toolsClose">×</button></div>
+    <div class="form">
+      <button class="smallBtn" id="exportBtn">تصدير نسخة JSON</button>
+      <button class="smallBtn" id="importBtn">استيراد نسخة JSON</button>
+      <button class="smallBtn danger" id="clearDone">حذف المهام المنجزة</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+      <p class="notice">البيانات محفوظة داخل الجهاز نفسه (LocalStorage) وتعمل بدون إنترنت بعد أول فتح.</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 <script>
 const $ = (id)=>document.getElementById(id);
-const storeKey = "iphone_tasks_pwa_pro_v2";
+const storeKey = "iphone_tasks_pwa_pro_v3";
 let tasks = JSON.parse(localStorage.getItem(storeKey) || "[]");
 let filter = "all";
+let editingId = null;
+let pickedPriority = "low";
+let pickedCategory = "عام";
 let timers = {};
+let subscriptionId = null;
+
+// === إعدادات OneSignal ===
+// تنبيه أمني: المفتاح أدناه مرئي لأي شخص يفتح كود الصفحة لأن لا يوجد خادم وسيط.
+// مقبول لمشروع شخصي. إن لاحظت إشعارات غريبة لاحقًا: OneSignal > Keys & IDs > Generate New API Key.
+const CONFIG = {
+  ONESIGNAL_APP_ID: "d810c491-89a1-41af-bea5-5719bd01b2a8",
+  REST_API_KEY: "os_v2_app_3aimjemjufa27pvfk4m32ansvctg3qz54jsechej6t4i6pgid72nnusbm6t6eomli4qpbu44auqwfcwjgqomjkg3y7pfeuvwilb3oda"
+};
 
 function save(){ localStorage.setItem(storeKey, JSON.stringify(tasks)); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
 function pad(n){return String(n).padStart(2,"0")}
-function localValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 function localDateValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function dateFromIso(iso){ return iso ? iso.slice(0,10) : ""; }
 function timeFromIso(iso){ return iso ? iso.slice(11,16) : ""; }
 function splitSet(d){ $("dueDate").value=localDateValue(d); $("dueTime").value=`${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 function buildDue(){
-  const date = $("dueDate").value;
-  const time = $("dueTime").value;
+  const date = $("dueDate").value, time = $("dueTime").value;
   if(!date && !time) return "";
-  if(date && !time){ toast("اختر الوقت بالساعة والدقيقة أو اترك التاريخ فارغًا"); return false; }
-  const finalDate = date || localDateValue(new Date());
-  return `${finalDate}T${time}`;
+  if(date && !time){ toast("اختر الوقت أو اترك التاريخ فارغًا"); return false; }
+  return `${date || localDateValue(new Date())}T${time}`;
 }
 function isToday(iso){ if(!iso) return false; const d=new Date(iso), n=new Date(); return d.getFullYear()==n.getFullYear()&&d.getMonth()==n.getMonth()&&d.getDate()==n.getDate(); }
 function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); return d.toLocaleString("ar-JO",{weekday:"short",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}); }
 function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
 
-function isStandalone(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+/* ===== Sheets ===== */
+function openSheet(overlayId, sheetId){ $(overlayId).classList.add("show"); $(sheetId).classList.add("show"); }
+function closeSheet(overlayId, sheetId){ $(overlayId).classList.remove("show"); $(sheetId).classList.remove("show"); }
+function wireSheet(overlayId, sheetId, openBtnId, closeBtnId, onOpen){
+  if(openBtnId) $(openBtnId).onclick = ()=>{ if(onOpen) onOpen(); openSheet(overlayId, sheetId); };
+  $(closeBtnId).onclick = ()=>closeSheet(overlayId, sheetId);
+  $(overlayId).onclick = ()=>closeSheet(overlayId, sheetId);
 }
-function setPushStatus(msg){
-  const el = $("pushStatus");
-  if(el) el.textContent = msg;
+function resetAddForm(){
+  editingId = null; $("addSheetTitle").textContent = "مهمة جديدة";
+  $("title").value=""; $("note").value=""; $("dueDate").value=""; $("dueTime").value="";
+  pickedPriority="low"; pickedCategory="عام";
+  document.querySelectorAll("#priorityChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val==="low"));
+  document.querySelectorAll("#categoryChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val==="عام"));
 }
-function addPushLine(msg){
-  const el = $("pushStatus");
-  if(!el) return;
-  const old = el.innerHTML ? el.innerHTML + "<br>" : "";
-  el.innerHTML = old + "• " + msg;
-}
-function clearPushStatus(msg){
-  const el = $("pushStatus");
-  if(el) el.innerHTML = msg ? "• " + msg : "";
-}
+wireSheet("addOverlay","addSheet","fabAdd","addClose", resetAddForm);
+wireSheet("notifyOverlay","notifySheet","notifyBtn","notifyClose");
+wireSheet("toolsOverlay","toolsSheet","toolsBtn","toolsClose");
+
+document.querySelectorAll("#priorityChips .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#priorityChips .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); pickedPriority=c.dataset.val;
+});
+document.querySelectorAll("#categoryChips .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#categoryChips .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); pickedCategory=c.dataset.val;
+});
+
+/* ===== Push helpers ===== */
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function addPushLine(msg){ const el=$("pushStatus"); if(!el) return; el.innerHTML = (el.innerHTML? el.innerHTML+"<br>":"") + "• " + msg; }
+function clearPushStatus(msg){ const el=$("pushStatus"); if(el) el.innerHTML = msg ? "• "+msg : ""; }
 function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
-async function withTimeout(promise, ms, timeoutMsg){
-  let t;
-  const timeout = new Promise((_, rej)=>{ t=setTimeout(()=>rej(new Error(timeoutMsg||"timeout")), ms); });
-  try { return await Promise.race([promise, timeout]); }
-  finally { clearTimeout(t); }
+async function withTimeout(p, ms, msg){ let t; const to=new Promise((_,rej)=>{t=setTimeout(()=>rej(new Error(msg||"timeout")),ms)}); try{ return await Promise.race([p,to]); } finally{ clearTimeout(t); } }
+async function getOneSignal(ms=9000){
+  return await withTimeout(new Promise((res,rej)=>{
+    if(!window.OneSignalDeferred){ rej(new Error("لم يتم إنشاء OneSignalDeferred")); return; }
+    window.OneSignalDeferred.push(function(OneSignal){ res(OneSignal); });
+  }), ms, "انتهت مهلة تحميل OneSignal");
 }
-async function getOneSignal(timeoutMs=9000){
-  return await withTimeout(new Promise((resolve, reject)=>{
-    if(!window.OneSignalDeferred){ reject(new Error("لم يتم إنشاء OneSignalDeferred")); return; }
-    window.OneSignalDeferred.push(function(OneSignal){ resolve(OneSignal); });
-  }), timeoutMs, "انتهت مهلة تحميل OneSignal");
+function setHeaderIcon(){
+  const btn=$("notifyBtn");
+  if(!("Notification" in window)){ btn.textContent="🔕"; btn.className="iconBtn off"; return; }
+  if(Notification.permission==="granted"){ btn.textContent="🔔"; btn.className="iconBtn on"; }
+  else if(Notification.permission==="denied"){ btn.textContent="🔕"; btn.className="iconBtn off"; }
+  else { btn.textContent="🔔"; btn.className="iconBtn"; btn.insertAdjacentHTML("beforeend",'<span class="dotbadge"></span>'); }
+}
+function setPushBtnState(){
+  const btn=$("pushBtn");
+  if("Notification" in window && Notification.permission==="granted" && subscriptionId){ btn.textContent="الإشعارات مفعّلة ✓"; btn.classList.add("subscribed"); }
+  else { btn.textContent="تفعيل إشعارات قفل الشاشة"; btn.classList.remove("subscribed"); }
 }
 async function diagnosePush(){
   clearPushStatus("بدأ الفحص...");
-  addPushLine(isStandalone() ? "التطبيق مفتوح من الأيقونة: نعم" : "التطبيق مفتوح من Safari: لا يصلح للآيفون Push");
-  addPushLine(location.protocol === "https:" ? "HTTPS: نعم" : "HTTPS: لا");
-  addPushLine("Notification API: " + (("Notification" in window) ? "موجود" : "غير موجود"));
+  addPushLine(isStandalone() ? "التطبيق مفتوح من الأيقونة: نعم" : "مفتوح من Safari مباشرة: لا يصلح لـ Push على الآيفون");
+  addPushLine(location.protocol==="https:" ? "HTTPS: نعم" : "HTTPS: لا");
+  addPushLine("Notification API: " + (("Notification" in window)?"موجود":"غير موجود"));
   if("Notification" in window) addPushLine("حالة إذن الآيفون: " + Notification.permission);
-  addPushLine("Service Worker: " + (("serviceWorker" in navigator) ? "موجود" : "غير موجود"));
+  addPushLine("Service Worker: " + (("serviceWorker" in navigator)?"موجود":"غير موجود"));
   if("serviceWorker" in navigator){
-    try{
-      const reg = await withTimeout(navigator.serviceWorker.getRegistration(), 5000, "تعذر فحص Service Worker");
-      addPushLine(reg ? ("Service Worker مسجل: " + (reg.active ? "نشط" : "غير نشط")) : "لا يوجد Service Worker مسجل");
-    }catch(e){ addPushLine("مشكلة Service Worker: " + e.message); }
+    try{ const reg = await withTimeout(navigator.serviceWorker.getRegistration(),5000); addPushLine(reg?("مسجل: "+(reg.active?"نشط":"غير نشط")):"لا يوجد Service Worker مسجل"); }
+    catch(e){ addPushLine("مشكلة Service Worker: "+e.message); }
   }
   try{
     const OneSignal = await getOneSignal(9000);
     addPushLine("OneSignal SDK: تم تحميله");
-    if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported){
-      let supported = OneSignal.Notifications.isPushSupported();
-      addPushLine("دعم Web Push: " + (supported ? "نعم" : "لا"));
+    if(OneSignal.Notifications?.isPushSupported) addPushLine("دعم Web Push: " + (OneSignal.Notifications.isPushSupported()?"نعم":"لا"));
+    if(OneSignal.User?.PushSubscription){
+      subscriptionId = OneSignal.User.PushSubscription.id || subscriptionId;
+      addPushLine("Subscription ID: " + (subscriptionId||"غير موجود بعد"));
+      addPushLine("Opted In: " + (OneSignal.User.PushSubscription.optedIn?"نعم":"لا"));
     }
-    if(OneSignal.User && OneSignal.User.PushSubscription){
-      addPushLine("Subscription ID: " + (OneSignal.User.PushSubscription.id || "غير موجود بعد"));
-      addPushLine("Opted In: " + (OneSignal.User.PushSubscription.optedIn ? "نعم" : "لا"));
-    }
-  }catch(e){
-    addPushLine("OneSignal لم يكتمل: " + e.message);
-  }
+    addPushLine("مفتاح REST API محفوظ: " + (CONFIG.REST_API_KEY ? "نعم" : "لا"));
+  }catch(e){ addPushLine("OneSignal لم يكتمل: "+e.message); }
+  setHeaderIcon(); setPushBtnState();
 }
 async function requestNotify(){
   clearPushStatus("جاري تجهيز طلب الإشعارات...");
-  if(!isStandalone()){
-    addPushLine("افتح التطبيق من الأيقونة على الشاشة الرئيسية، وليس Safari.");
-    toast("افتحه من الأيقونة");
-    return;
-  }
-  if(!("Notification" in window)){
-    addPushLine("هذا المتصفح لا يدعم Notification API.");
-    toast("الإشعارات غير مدعومة");
-    return;
-  }
-  addPushLine("حالة الإذن الحالية: " + Notification.permission);
-  if(Notification.permission === "denied"){
-    addPushLine("الإشعارات محظورة. احذف أيقونة التطبيق ثم أضفها من Safari من جديد، أو فعّلها من Settings > Notifications إن ظهرت.");
-    toast("الإشعارات محظورة");
-    return;
-  }
+  if(!isStandalone()){ addPushLine("افتح التطبيق من الأيقونة على الشاشة الرئيسية."); toast("افتحه من الأيقونة"); return; }
+  if(!("Notification" in window)){ addPushLine("هذا المتصفح لا يدعم الإشعارات."); return; }
+  if(Notification.permission==="denied"){ addPushLine("محظورة. احذف الأيقونة وأضفها من جديد من Safari."); toast("الإشعارات محظورة"); return; }
   let OneSignal;
+  try{ addPushLine("تحميل OneSignal..."); OneSignal = await getOneSignal(12000); addPushLine("OneSignal جاهز"); }
+  catch(e){ addPushLine("تعذر تحميل OneSignal: "+e.message); return; }
   try{
-    addPushLine("تحميل OneSignal...");
-    OneSignal = await getOneSignal(12000);
-    addPushLine("OneSignal جاهز");
-  }catch(e){
-    addPushLine("تعذر تحميل OneSignal: " + e.message);
-    addPushLine("تأكد أن الإنترنت شغال، وأن ملف OneSignalSDKWorker.js مرفوع بجانب index.html.");
-    toast("OneSignal غير جاهز");
-    return;
-  }
-  try{
-    if(OneSignal.Notifications && OneSignal.Notifications.isPushSupported && !OneSignal.Notifications.isPushSupported()){
-      addPushLine("هذا الجهاز لا يدعم Web Push هنا. يلزم iOS 16.4 أو أحدث + التطبيق من الشاشة الرئيسية.");
-      toast("Web Push غير مدعوم");
-      return;
+    if(OneSignal.Notifications?.isPushSupported && !OneSignal.Notifications.isPushSupported()){
+      addPushLine("الجهاز لا يدعم Web Push هنا (يلزم iOS 16.4+ من الشاشة الرئيسية)."); return;
     }
-    addPushLine("سنفتح نافذة OneSignal التمهيدية أولًا...");
-    let result = null;
-    if(OneSignal.Slidedown && OneSignal.Slidedown.promptPush){
-      try {
-        await withTimeout(OneSignal.Slidedown.promptPush({ force: true }), 15000, "نافذة OneSignal لم ترجع نتيجة خلال 15 ثانية");
-        addPushLine("تم استدعاء نافذة OneSignal.");
-      } catch(e){
-        addPushLine("ملاحظة نافذة OneSignal: " + e.message);
-      }
-    } else {
-      addPushLine("Slidedown غير متاح، سنجرب الطلب المباشر.");
-    }
+    if(OneSignal.Slidedown?.promptPush){ try{ await withTimeout(OneSignal.Slidedown.promptPush({force:true}),15000); }catch(e){ addPushLine("ملاحظة نافذة OneSignal: "+e.message); } }
     await wait(800);
-    if(Notification.permission === "default" && OneSignal.Notifications && OneSignal.Notifications.requestPermission){
-      try { result = await withTimeout(OneSignal.Notifications.requestPermission(), 15000, "طلب السماح المباشر لم يرجع نتيجة خلال 15 ثانية"); }
-      catch(e){ addPushLine("ملاحظة الطلب المباشر: " + e.message); }
-    } else if(Notification.permission === "default" && "Notification" in window){
-      try { result = await withTimeout(Notification.requestPermission(), 15000, "طلب السماح المحلي لم يرجع نتيجة"); }
-      catch(e){ addPushLine("ملاحظة الطلب المحلي: " + e.message); }
-    }
-    await wait(1500);
-    if(Notification.permission === "granted" && OneSignal.User && OneSignal.User.PushSubscription && OneSignal.User.PushSubscription.optIn){
-      try { await OneSignal.User.PushSubscription.optIn(); addPushLine("تم تنفيذ optIn للاشتراك."); }
-      catch(e){ addPushLine("ملاحظة optIn: " + e.message); }
-    }
-    await wait(1500);
+    if(Notification.permission==="default" && OneSignal.Notifications?.requestPermission){ try{ await withTimeout(OneSignal.Notifications.requestPermission(),15000); }catch(e){ addPushLine("ملاحظة الطلب المباشر: "+e.message); } }
+    await wait(1200);
+    if(Notification.permission==="granted" && OneSignal.User?.PushSubscription?.optIn){ try{ await OneSignal.User.PushSubscription.optIn(); }catch(e){ addPushLine("ملاحظة optIn: "+e.message); } }
+    await wait(1200);
     addPushLine("حالة الإذن بعد الطلب: " + Notification.permission);
-    if(OneSignal.User && OneSignal.User.PushSubscription){
-      const id = OneSignal.User.PushSubscription.id || "";
+    if(OneSignal.User?.PushSubscription){
+      subscriptionId = OneSignal.User.PushSubscription.id || null;
       const optedIn = !!OneSignal.User.PushSubscription.optedIn;
-      addPushLine("Subscription ID: " + (id || "غير موجود بعد"));
-      addPushLine("Opted In: " + (optedIn ? "نعم" : "لا"));
-      if(id || optedIn){
-        toast("تم تفعيل OneSignal");
-        addPushLine("اذهب إلى OneSignal > Audience > Subscriptions للتأكد من ظهور الجهاز.");
-      } else {
-        toast("لم يكتمل الاشتراك");
-        addPushLine("إذا لم تظهر نافذة السماح، اضغط فحص الإشعارات وأرسل لي النتيجة الظاهرة هنا.");
-      }
+      addPushLine("Subscription ID: " + (subscriptionId||"غير موجود بعد"));
+      addPushLine("Opted In: " + (optedIn?"نعم":"لا"));
+      if(subscriptionId || optedIn){ toast("تم تفعيل الإشعارات"); scheduleAllPush(); } else { toast("لم يكتمل الاشتراك"); }
     }
-  }catch(e){
-    addPushLine("خطأ أثناء طلب الإشعارات: " + e.message);
-    toast("فشل طلب الإذن");
+  }catch(e){ addPushLine("خطأ أثناء طلب الإشعارات: "+e.message); }
+  setHeaderIcon(); setPushBtnState();
+}
+async function schedulePush(task){
+  if(!CONFIG.REST_API_KEY || !subscriptionId || !task.due) return null;
+  const when = new Date(task.due);
+  if(isNaN(when.getTime()) || when.getTime()<=Date.now()) return null;
+  try{
+    const res = await fetch("https://api.onesignal.com/notifications?c=push", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Key " + CONFIG.REST_API_KEY },
+      body: JSON.stringify({
+        app_id: CONFIG.ONESIGNAL_APP_ID,
+        target_channel: "push",
+        include_subscription_ids: [subscriptionId],
+        headings: { en:"تذكير مهمة", ar:"تذكير مهمة" },
+        contents: { en: task.title, ar: task.title },
+        send_after: when.toISOString(),
+        priority: 10,
+        ios_sound: "default",
+        ios_interruption_level: "time-sensitive",
+        ios_badgeType: "Increase",
+        ios_badgeCount: 1,
+        android_sound: "default",
+        android_visibility: 1
+      })
+    });
+    const data = await res.json();
+    if(data && data.id) return data.id;
+    addPushLine("تعذرت جدولة الإشعار: " + JSON.stringify(data.errors||data));
+    return null;
+  }catch(e){ addPushLine("خطأ شبكة عند جدولة الإشعار: "+e.message); return null; }
+}
+async function cancelPush(task){
+  if(!CONFIG.REST_API_KEY || !task?.pushId) return;
+  try{ await fetch(`https://api.onesignal.com/notifications/${task.pushId}?app_id=${CONFIG.ONESIGNAL_APP_ID}`, { method:"DELETE", headers:{ "Authorization":"Key "+CONFIG.REST_API_KEY } }); }
+  catch(e){}
+}
+async function scheduleAllPush(){
+  if(!CONFIG.REST_API_KEY || !subscriptionId) return;
+  for(const task of tasks){
+    if(!task.done && task.due && !task.pushId){ const id = await schedulePush(task); if(id){ task.pushId=id; save(); render(); } }
   }
 }
 function notify(title, body){
   if("Notification" in window && Notification.permission==="granted"){
-    try{ navigator.serviceWorker?.ready.then(reg=>reg.showNotification(title,{body,icon:"icon-192.png",badge:"icon-192.png"})); }
+    try{ navigator.serviceWorker?.ready.then(reg=>reg.showNotification(title,{body,icon:"icon-192.png",badge:"icon-192.png",vibrate:[200,100,200]})); }
     catch(e){ new Notification(title,{body}); }
-  } else {
-    toast(title + " — " + body);
-  }
+  } else { toast(title+" — "+body); }
 }
 function scheduleAll(){
   Object.values(timers).forEach(clearTimeout); timers={};
   const now=Date.now();
   tasks.forEach(task=>{
     if(task.done || !task.due) return;
-    const time = new Date(task.due).getTime();
-    const diff = time - now;
-    if(diff > 0 && diff < 2147483647){
-      timers[task.id] = setTimeout(()=>notify("تذكير مهمة", task.title), diff);
-    }
+    const diff = new Date(task.due).getTime()-now;
+    if(diff>0 && diff<2147483647) timers[task.id]=setTimeout(()=>notify("تذكير مهمة", task.title), diff);
   });
 }
 
+/* ===== Render ===== */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 function render(){
   const q=$("search").value.trim().toLowerCase();
-  let list = tasks.filter(t => {
+  let list = tasks.filter(t=>{
     if(q && !(t.title+" "+(t.note||"")+" "+t.category).toLowerCase().includes(q)) return false;
     if(filter==="today") return isToday(t.due);
     if(filter==="open") return !t.done;
@@ -390,21 +570,33 @@ function render(){
     if(filter==="high") return t.priority==="high";
     return true;
   }).sort((a,b)=>(a.done-b.done) || ((a.due||"9999").localeCompare(b.due||"9999")));
-  $("countAll").textContent = tasks.length;
-  $("countToday").textContent = tasks.filter(t=>isToday(t.due)&&!t.done).length;
+
+  const todays = tasks.filter(t=>isToday(t.due));
+  const todayDone = todays.filter(t=>t.done).length;
+  const pct = todays.length ? Math.round((todayDone/todays.length)*100) : 0;
+  const r=33, circumference=2*Math.PI*r;
+  const ringEl = $("ringProg");
+  ringEl.style.strokeDasharray = circumference;
+  ringEl.style.strokeDashoffset = circumference - (circumference*pct/100);
+  $("ringPct").textContent = pct+"%";
+  $("ringLabel").textContent = todays.length ? `أنجزت ${todayDone} من ${todays.length} مهمة اليوم` : "لا توجد مهام اليوم بعد";
+  $("countToday").textContent = todays.length;
+  $("countOpen").textContent = tasks.filter(t=>!t.done).length;
   $("countDone").textContent = tasks.filter(t=>t.done).length;
+
   const box=$("tasks");
-  if(!list.length){ box.innerHTML = `<div class="empty">لا توجد مهام هنا الآن.<br>أضف مهمة جديدة من الأعلى.</div>`; return; }
-  box.innerHTML = list.map(t=>`
-    <div class="task ${t.done?'done':''}" data-id="${t.id}">
+  if(!list.length){ box.innerHTML = `<div class="empty"><div class="big">📋</div>لا توجد مهام هنا الآن.<br>اضغط على + بالأسفل لإضافة مهمة جديدة.</div>`; return; }
+  box.innerHTML = list.map((t,i)=>`
+    <div class="task ${t.priority} ${t.done?'done':''}" data-id="${t.id}" style="animation-delay:${Math.min(i*35,350)}ms">
       <div class="check" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
       <div class="content">
         <div class="title">${escapeHtml(t.title)}</div>
         ${t.note?`<div class="notice">${escapeHtml(t.note)}</div>`:""}
         <div class="meta">
           <span class="pill">${fmt(t.due)}</span>
-          <span class="pill ${t.priority}">أولوية ${priText(t.priority)}</span>
+          <span class="pill">أولوية ${priText(t.priority)}</span>
           <span class="pill">${escapeHtml(t.category)}</span>
+          ${t.pushId?`<span class="pill push">🔔 مجدولة</span>`:""}
         </div>
       </div>
       <div class="actions">
@@ -413,62 +605,67 @@ function render(){
       </div>
     </div>`).join("");
 }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-window.toggleTask = (id)=>{ const t=tasks.find(x=>x.id===id); if(t){t.done=!t.done; save(); render(); scheduleAll();} }
-window.deleteTask = (id)=>{ tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); }
-window.editTask = (id)=>{
+window.toggleTask=(id)=>{ const t=tasks.find(x=>x.id===id); if(!t) return; t.done=!t.done; if(t.done && t.pushId){ cancelPush(t); t.pushId=null; } save(); render(); scheduleAll(); };
+window.deleteTask=(id)=>{ const t=tasks.find(x=>x.id===id); if(t?.pushId) cancelPush(t); tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); };
+window.editTask=(id)=>{
   const t=tasks.find(x=>x.id===id); if(!t) return;
-  $("title").value=t.title; $("note").value=t.note||""; $("dueDate").value=dateFromIso(t.due); $("dueTime").value=timeFromIso(t.due); $("priority").value=t.priority; $("category").value=t.category;
-  tasks=tasks.filter(x=>x.id!==id); save(); render(); scheduleAll(); toast("عدّل البيانات ثم اضغط إضافة");
-}
+  if(t.pushId) cancelPush(t);
+  editingId=id; $("addSheetTitle").textContent="تعديل المهمة";
+  $("title").value=t.title; $("note").value=t.note||""; $("dueDate").value=dateFromIso(t.due); $("dueTime").value=timeFromIso(t.due);
+  pickedPriority=t.priority; pickedCategory=t.category;
+  document.querySelectorAll("#priorityChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val===t.priority));
+  document.querySelectorAll("#categoryChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.val===t.category));
+  openSheet("addOverlay","addSheet");
+};
 
-$("addBtn").onclick = ()=>{
+$("addBtn").onclick = async ()=>{
   const title=$("title").value.trim();
   if(!title){ toast("اكتب عنوان المهمة أولًا"); return; }
   const due = buildDue();
-  if(due === false) return;
-  tasks.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, note:$("note").value.trim(), due, priority:$("priority").value, category:$("category").value, done:false, createdAt:new Date().toISOString()});
-  $("title").value=""; $("note").value=""; $("dueDate").value=""; $("dueTime").value="";
-  save(); render(); scheduleAll(); toast("تمت إضافة المهمة");
-}
-$("quickHalf").onclick = ()=>{
-  const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d);
-}
-$("quickHour").onclick = ()=>{
-  const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); splitSet(d);
-}
-$("quickEvening").onclick = ()=>{
-  const d=new Date(); d.setHours(20,0,0,0);
-  if(d.getTime() <= Date.now()){ toast("وقت 8 مساءً مرّ اليوم، اختر وقتًا آخر يدويًا"); }
-  splitSet(d);
-}
-$("notifyBtn").onclick = requestNotify;
-$("pushBtn").onclick = requestNotify;
-$("diagnoseBtn").onclick = diagnosePush;
-$("search").oninput = render;
-document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active"); filter=btn.dataset.filter; render();
+  if(due===false) return;
+  if(editingId){ tasks=tasks.filter(t=>t.id!==editingId); }
+  const task = { id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())), title, note:$("note").value.trim(), due, priority:pickedPriority, category:pickedCategory, done:false, pushId:null, createdAt:new Date().toISOString() };
+  tasks.push(task);
+  save(); render(); scheduleAll(); closeSheet("addOverlay","addSheet"); toast(editingId?"تم تحديث المهمة":"تمت إضافة المهمة");
+  if(due){ const id = await schedulePush(task); if(id){ task.pushId=id; save(); render(); } }
+};
+$("quickHalf").onclick=()=>{ const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d); };
+$("quickHour").onclick=()=>{ const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); splitSet(d); };
+$("quickEvening").onclick=()=>{ const d=new Date(); d.setHours(20,0,0,0); if(d.getTime()<=Date.now()) toast("8 مساءً مرّت اليوم، اختر وقتًا آخر"); splitSet(d); };
+$("diagnoseBtn").onclick=diagnosePush;
+$("pushBtn").onclick=requestNotify;
+$("search").oninput=render;
+document.querySelectorAll(".seg").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll(".seg").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); filter=btn.dataset.filter; render();
 });
 $("clearDone").onclick=()=>{
-  const before=tasks.length; tasks=tasks.filter(t=>!t.done); save(); render(); scheduleAll(); toast(`تم حذف ${before-tasks.length} مهمة منجزة`);
-}
+  const before=tasks.length;
+  tasks.filter(t=>t.done && t.pushId).forEach(cancelPush);
+  tasks=tasks.filter(t=>!t.done); save(); render(); scheduleAll(); toast(`تم حذف ${before-tasks.length} مهمة منجزة`);
+};
 $("exportBtn").onclick=()=>{
   const blob=new Blob([JSON.stringify(tasks,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="tasks-backup.json"; a.click(); URL.revokeObjectURL(a.href);
-}
+};
 $("importBtn").onclick=()=>$("importFile").click();
 $("importFile").onchange=(e)=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload=()=>{ try{ const data=JSON.parse(reader.result); if(Array.isArray(data)){ tasks=data; save(); render(); scheduleAll(); toast("تم الاستيراد"); } }catch(err){ toast("ملف غير صالح"); } };
   reader.readAsText(file);
-}
-function init(){
-  $("todayText").textContent = new Date().toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("/iphone_tasks_pwa_demo/OneSignalSDKWorker.js", { scope: "/iphone_tasks_pwa_demo/" }); }
-  render(); scheduleAll();
+};
+
+async function init(){
+  const now=new Date();
+  $("todayText").textContent = now.toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
+  const h=now.getHours();
+  $("greetTitle").textContent = h<12 ? "صباح الخير 👋" : (h<18 ? "أهلًا بك 👋" : "مساء الخير 👋");
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("/iphone_tasks_pwa_demo/OneSignalSDKWorker.js", { scope:"/iphone_tasks_pwa_demo/" }); }
+  setHeaderIcon(); render(); scheduleAll();
+  try{ const OneSignal = await getOneSignal(9000); if(OneSignal.User?.PushSubscription){ subscriptionId = OneSignal.User.PushSubscription.id || null; } }
+  catch(e){}
+  setPushBtnState();
 }
 init();
 </script>

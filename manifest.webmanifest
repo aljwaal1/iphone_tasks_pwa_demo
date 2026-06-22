@@ -5,8 +5,8 @@
   "start_url": "/iphone_tasks_pwa_demo/index.html",
   "scope": "/iphone_tasks_pwa_demo/",
   "display": "standalone",
-  "background_color": "#0f211b",
-  "theme_color": "#12372a",
+  "background_color": "#04060d",
+  "theme_color": "#05070f",
   "dir": "rtl",
   "lang": "ar",
   "icons": [
