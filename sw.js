@@ -1,4 +1,4 @@
-const CACHE_NAME = "iphone-tasks-pwa-pro-v2";
+const CACHE_NAME = "iphone-tasks-pwa-pro-v4";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(FILES)));

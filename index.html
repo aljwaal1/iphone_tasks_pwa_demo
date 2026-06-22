@@ -66,6 +66,7 @@
     .danger{color:#ffd5d5}
     .empty{text-align:center;color:var(--muted);padding:24px 8px;line-height:1.8}
     .toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    .quicks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .notice{font-size:13px;color:var(--muted);line-height:1.7}
     .toast{position:fixed;right:14px;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));background:#f7fff9;color:#0b2419;border-radius:18px;padding:14px;text-align:center;font-weight:900;box-shadow:var(--shadow);transform:translateY(120px);transition:.25s}
     .toast.show{transform:translateY(0)}
@@ -94,14 +95,15 @@
         <input id="title" placeholder="اكتب المهمة هنا">
         <textarea id="note" placeholder="ملاحظة اختيارية"></textarea>
         <div class="row">
-          <input id="due" type="datetime-local" aria-label="تاريخ ووقت المهمة">
+          <input id="dueDate" type="date" aria-label="تاريخ المهمة">
+          <input id="dueTime" type="time" step="60" aria-label="وقت المهمة بالساعة والدقيقة">
+        </div>
+        <div class="row">
           <select id="priority">
             <option value="low">أولوية عادية</option>
             <option value="med">أولوية متوسطة</option>
             <option value="high">أولوية عالية</option>
           </select>
-        </div>
-        <div class="row">
           <select id="category">
             <option value="عام">عام</option>
             <option value="عمل">عمل</option>
@@ -109,12 +111,14 @@
             <option value="منزل">منزل</option>
             <option value="محاسبة">محاسبة</option>
           </select>
+        </div>
+        <div class="quicks">
+          <button class="smallBtn" id="quickHalf">بعد 30 دقيقة</button>
           <button class="smallBtn" id="quickHour">بعد ساعة</button>
-          <button class="smallBtn" id="quickToday">اليوم 8 مساءً</button>
-          <button class="smallBtn" id="quickTomorrow">غدًا 9 صباحًا</button>
+          <button class="smallBtn" id="quickEvening">اليوم 8 مساءً</button>
         </div>
         <button class="primary" id="addBtn">إضافة المهمة</button>
-        <div class="notice">اختر التاريخ والوقت حسب حاجتك: اليوم، بعد ساعة، غدًا، أو اتركه فارغًا إذا كانت المهمة بدون تذكير.</div>
+        <div class="notice">اكتب وقت المهمة بالساعة والدقيقة لأي موعد خلال اليوم. إذا اخترت وقتًا فقط، سيضع التطبيق تاريخ اليوم تلقائيًا.</div>
         <div class="notice">الإشعارات تعمل بشكل ممتاز أثناء فتح التطبيق أو وجوده قريبًا في الخلفية. الإشعارات القوية بعد إغلاق التطبيق تمامًا تحتاج مرحلة Web Push لاحقًا.</div>
       </div>
     </section>
@@ -141,7 +145,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة مطورة v3 — اختيار وقت المهمة</div>
+    <div class="footer">نسخة مطورة v4 — وقت اليوم بالساعة والدقيقة</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -156,6 +160,18 @@ function save(){ localStorage.setItem(storeKey, JSON.stringify(tasks)); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
 function pad(n){return String(n).padStart(2,"0")}
 function localValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function localDateValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dateFromIso(iso){ return iso ? iso.slice(0,10) : ""; }
+function timeFromIso(iso){ return iso ? iso.slice(11,16) : ""; }
+function splitSet(d){ $("dueDate").value=localDateValue(d); $("dueTime").value=`${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function buildDue(){
+  const date = $("dueDate").value;
+  const time = $("dueTime").value;
+  if(!date && !time) return "";
+  if(date && !time){ toast("اختر الوقت بالساعة والدقيقة أو اترك التاريخ فارغًا"); return false; }
+  const finalDate = date || localDateValue(new Date());
+  return `${finalDate}T${time}`;
+}
 function isToday(iso){ if(!iso) return false; const d=new Date(iso), n=new Date(); return d.getFullYear()==n.getFullYear()&&d.getMonth()==n.getMonth()&&d.getDate()==n.getDate(); }
 function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); return d.toLocaleString("ar-JO",{weekday:"short",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}); }
 function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
@@ -224,27 +240,29 @@ window.toggleTask = (id)=>{ const t=tasks.find(x=>x.id===id); if(t){t.done=!t.do
 window.deleteTask = (id)=>{ tasks=tasks.filter(t=>t.id!==id); save(); render(); scheduleAll(); toast("تم حذف المهمة"); }
 window.editTask = (id)=>{
   const t=tasks.find(x=>x.id===id); if(!t) return;
-  $("title").value=t.title; $("note").value=t.note||""; $("due").value=t.due||""; $("priority").value=t.priority; $("category").value=t.category;
+  $("title").value=t.title; $("note").value=t.note||""; $("dueDate").value=dateFromIso(t.due); $("dueTime").value=timeFromIso(t.due); $("priority").value=t.priority; $("category").value=t.category;
   tasks=tasks.filter(x=>x.id!==id); save(); render(); scheduleAll(); toast("عدّل البيانات ثم اضغط إضافة");
 }
 
 $("addBtn").onclick = ()=>{
   const title=$("title").value.trim();
   if(!title){ toast("اكتب عنوان المهمة أولًا"); return; }
-  tasks.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, note:$("note").value.trim(), due:$("due").value, priority:$("priority").value, category:$("category").value, done:false, createdAt:new Date().toISOString()});
-  $("title").value=""; $("note").value=""; $("due").value="";
+  const due = buildDue();
+  if(due === false) return;
+  tasks.push({id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, note:$("note").value.trim(), due, priority:$("priority").value, category:$("category").value, done:false, createdAt:new Date().toISOString()});
+  $("title").value=""; $("note").value=""; $("dueDate").value=""; $("dueTime").value="";
   save(); render(); scheduleAll(); toast("تمت إضافة المهمة");
 }
+$("quickHalf").onclick = ()=>{
+  const d=new Date(); d.setMinutes(d.getMinutes()+30); d.setSeconds(0,0); splitSet(d);
+}
 $("quickHour").onclick = ()=>{
-  const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); $("due").value=localValue(d);
+  const d=new Date(); d.setHours(d.getHours()+1); d.setSeconds(0,0); splitSet(d);
 }
-$("quickToday").onclick = ()=>{
+$("quickEvening").onclick = ()=>{
   const d=new Date(); d.setHours(20,0,0,0);
-  if(d.getTime() <= Date.now()) d.setHours(d.getHours()+1);
-  $("due").value=localValue(d);
-}
-$("quickTomorrow").onclick = ()=>{
-  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0); $("due").value=localValue(d);
+  if(d.getTime() <= Date.now()){ toast("وقت 8 مساءً مرّ اليوم، اختر وقتًا آخر يدويًا"); }
+  splitSet(d);
 }
 $("notifyBtn").onclick = requestNotify;
 $("search").oninput = render;
