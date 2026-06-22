@@ -10,6 +10,36 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>مهامي اليومية</title>
+  <!-- OneSignal Web Push SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "d810c491-89a1-41af-bea5-5719bd01b2a8",
+        safari_web_id: "web.onesignal.auto.18427476-d96c-4d38-9e88-40d33a9d693d",
+        serviceWorkerPath: "sw.js",
+        serviceWorkerParam: { scope: "/iphone_tasks_pwa_demo/" },
+        notifyButton: {
+          enable: true,
+          size: "medium",
+          position: "bottom-left",
+          prenotify: true,
+          showCredit: false,
+          text: {
+            'tip.state.unsubscribed': 'تفعيل إشعارات مهامي',
+            'tip.state.subscribed': 'الإشعارات مفعلة',
+            'tip.state.blocked': 'الإشعارات محظورة',
+            'message.prenotify': 'اضغط لتفعيل إشعارات المهام',
+            'message.action.subscribed': 'تم تفعيل الإشعارات',
+            'message.action.resubscribed': 'تم تفعيل الإشعارات مرة أخرى',
+            'message.action.unsubscribed': 'تم إيقاف الإشعارات'
+          }
+        }
+      });
+    });
+  </script>
+
   <style>
     :root{
       --bg:#0f211b; --card:#16352b; --card2:#1e4639; --text:#f4fff8; --muted:#a9c9b8;
@@ -119,7 +149,7 @@
         </div>
         <button class="primary" id="addBtn">إضافة المهمة</button>
         <div class="notice">اكتب وقت المهمة بالساعة والدقيقة لأي موعد خلال اليوم. إذا اخترت وقتًا فقط، سيضع التطبيق تاريخ اليوم تلقائيًا.</div>
-        <div class="notice">الإشعارات تعمل بشكل ممتاز أثناء فتح التطبيق أو وجوده قريبًا في الخلفية. الإشعارات القوية بعد إغلاق التطبيق تمامًا تحتاج مرحلة Web Push لاحقًا.</div>
+        <div class="notice">تم ربط التطبيق بـ OneSignal Web Push. بعد تفعيل الإذن من أيقونة الجرس العائمة يمكنك اختبار وصول إشعار من لوحة OneSignal حتى والشاشة مغلقة.</div>
       </div>
     </section>
 
@@ -145,7 +175,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة مطورة v4 — وقت اليوم بالساعة والدقيقة</div>
+    <div class="footer">نسخة مطورة v5 — OneSignal Web Push</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -177,6 +207,17 @@ function fmt(iso){ if(!iso) return "بدون موعد"; const d=new Date(iso); r
 function priText(p){ return p==="high"?"عالية":p==="med"?"متوسطة":"عادية"; }
 
 function requestNotify(){
+  if(window.OneSignalDeferred){
+    window.OneSignalDeferred.push(async function(OneSignal){
+      try{
+        await OneSignal.Notifications.requestPermission();
+        toast("تم طلب تفعيل إشعارات OneSignal");
+      }catch(e){
+        toast("اضغط جرس OneSignal العائم لتفعيل الإشعارات");
+      }
+    });
+    return;
+  }
   if(!("Notification" in window)){ toast("هذا المتصفح لا يدعم الإشعارات"); return; }
   Notification.requestPermission().then(p => toast(p==="granted" ? "تم تفعيل الإشعارات" : "لم يتم السماح بالإشعارات"));
 }
