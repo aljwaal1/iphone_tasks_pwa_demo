@@ -18,8 +18,21 @@
       await OneSignal.init({
         appId: "d810c491-89a1-41af-bea5-5719bd01b2a8",
         safari_web_id: "web.onesignal.auto.18427476-d96c-4d38-9e88-40d33a9d693d",
-        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerPath: "/iphone_tasks_pwa_demo/OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/iphone_tasks_pwa_demo/" },
+        promptOptions: {
+          slidedown: {
+            prompts: [{
+              type: "push",
+              autoPrompt: false,
+              text: {
+                actionMessage: "هل تريد استقبال تذكيرات المهام حتى عندما تكون الشاشة مغلقة؟",
+                acceptButton: "تفعيل",
+                cancelButton: "لاحقًا"
+              }
+            }]
+          }
+        },
         notifyButton: {
           enable: true,
           size: "medium",
@@ -177,7 +190,7 @@
       <p class="notice">البيانات محفوظة داخل الجهاز نفسه باستخدام LocalStorage وتعمل بدون إنترنت بعد أول فتح.</p>
     </section>
 
-    <div class="footer">نسخة مطورة v7 — فحص OneSignal</div>
+    <div class="footer">نسخة مطورة v9 — إصلاح مسار GitHub Pages وOneSignal</div>
   </div>
   <div class="toast" id="toast"></div>
 
@@ -301,15 +314,32 @@ async function requestNotify(){
       toast("Web Push غير مدعوم");
       return;
     }
-    addPushLine("سيظهر طلب السماح الآن إن لم يكن ظهر سابقًا...");
+    addPushLine("سنفتح نافذة OneSignal التمهيدية أولًا...");
     let result = null;
-    if(OneSignal.Notifications && OneSignal.Notifications.requestPermission){
-      try { result = await withTimeout(OneSignal.Notifications.requestPermission(), 12000, "طلب السماح لم يرجع نتيجة خلال 12 ثانية"); }
-      catch(e){ addPushLine("ملاحظة: " + e.message); }
-    } else if("Notification" in window){
-      result = await withTimeout(Notification.requestPermission(), 12000, "طلب السماح المحلي لم يرجع نتيجة");
+    if(OneSignal.Slidedown && OneSignal.Slidedown.promptPush){
+      try {
+        await withTimeout(OneSignal.Slidedown.promptPush({ force: true }), 15000, "نافذة OneSignal لم ترجع نتيجة خلال 15 ثانية");
+        addPushLine("تم استدعاء نافذة OneSignal.");
+      } catch(e){
+        addPushLine("ملاحظة نافذة OneSignal: " + e.message);
+      }
+    } else {
+      addPushLine("Slidedown غير متاح، سنجرب الطلب المباشر.");
     }
-    await wait(1200);
+    await wait(800);
+    if(Notification.permission === "default" && OneSignal.Notifications && OneSignal.Notifications.requestPermission){
+      try { result = await withTimeout(OneSignal.Notifications.requestPermission(), 15000, "طلب السماح المباشر لم يرجع نتيجة خلال 15 ثانية"); }
+      catch(e){ addPushLine("ملاحظة الطلب المباشر: " + e.message); }
+    } else if(Notification.permission === "default" && "Notification" in window){
+      try { result = await withTimeout(Notification.requestPermission(), 15000, "طلب السماح المحلي لم يرجع نتيجة"); }
+      catch(e){ addPushLine("ملاحظة الطلب المحلي: " + e.message); }
+    }
+    await wait(1500);
+    if(Notification.permission === "granted" && OneSignal.User && OneSignal.User.PushSubscription && OneSignal.User.PushSubscription.optIn){
+      try { await OneSignal.User.PushSubscription.optIn(); addPushLine("تم تنفيذ optIn للاشتراك."); }
+      catch(e){ addPushLine("ملاحظة optIn: " + e.message); }
+    }
+    await wait(1500);
     addPushLine("حالة الإذن بعد الطلب: " + Notification.permission);
     if(OneSignal.User && OneSignal.User.PushSubscription){
       const id = OneSignal.User.PushSubscription.id || "";
@@ -437,7 +467,7 @@ $("importFile").onchange=(e)=>{
 }
 function init(){
   $("todayText").textContent = new Date().toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("OneSignalSDKWorker.js"); }
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("/iphone_tasks_pwa_demo/OneSignalSDKWorker.js", { scope: "/iphone_tasks_pwa_demo/" }); }
   render(); scheduleAll();
 }
 init();
