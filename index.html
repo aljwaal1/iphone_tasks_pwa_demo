@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="مهامي" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>مهامي - PWA</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111c35;--muted:#94a3b8;--text:#f8fafc;--line:#26334f;--accent:#38bdf8;--ok:#22c55e;--danger:#fb7185;--warn:#f59e0b}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:linear-gradient(180deg,#0f172a,#111827);color:var(--text);min-height:100vh}
+    .wrap{max-width:760px;margin:auto;padding:18px 14px 90px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 18px}.brand h1{margin:0;font-size:28px}.brand p{margin:5px 0 0;color:var(--muted);font-size:14px}.badge{background:#082f49;border:1px solid #075985;color:#bae6fd;padding:8px 12px;border-radius:999px;font-size:13px}.card{background:rgba(17,28,53,.92);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 15px 40px rgba(0,0,0,.22);margin-bottom:14px}.row{display:grid;grid-template-columns:1fr;gap:10px} input,textarea,select,button{font:inherit;border-radius:14px;border:1px solid var(--line);padding:12px;background:#0b1223;color:var(--text);outline:none}textarea{min-height:80px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--accent)}button{cursor:pointer;background:#0ea5e9;border-color:#0284c7;font-weight:700}button.secondary{background:#172033;border-color:#334155;color:#e2e8f0}button.danger{background:#be123c;border-color:#9f1239}button.ok{background:#16a34a;border-color:#15803d}.actions{display:flex;gap:8px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{text-align:center;background:#0b1223;border:1px solid var(--line);border-radius:18px;padding:12px}.stat b{display:block;font-size:22px}.stat span{color:var(--muted);font-size:13px}.task{display:grid;gap:10px;border:1px solid var(--line);border-radius:18px;padding:13px;background:#0b1223;margin-top:10px}.task.done{opacity:.62}.task-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.title{font-size:17px;font-weight:800}.meta{color:var(--muted);font-size:13px;line-height:1.6}.pill{font-size:12px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}.high{background:#451a03;color:#fed7aa;border-color:#9a3412}.mid{background:#172554;color:#bfdbfe;border-color:#1d4ed8}.low{background:#052e16;color:#bbf7d0;border-color:#166534}.empty{text-align:center;color:var(--muted);padding:25px}.footer{position:fixed;left:0;right:0;bottom:0;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px}.footer .inner{max-width:760px;margin:auto;display:flex;gap:8px}.footer button{flex:1}.note{font-size:13px;color:var(--muted);line-height:1.7}.install{display:none}.small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand"><h1>مهامي</h1><p>تطبيق مهام يعمل على الآيفون كـ PWA</p></div>
+      <div class="badge" id="status">جاهز</div>
+    </div>
+
+    <div class="card install" id="iosHelp">
+      <b>طريقة التثبيت على الآيفون:</b>
+      <div class="note">افتح الرابط من Safari ثم اضغط مشاركة ثم <b>Add to Home Screen</b> حتى يظهر التطبيق كأيقونة.</div>
+    </div>
+
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="total">0</b><span>الكل</span></div>
+        <div class="stat"><b id="pending">0</b><span>غير منجز</span></div>
+        <div class="stat"><b id="done">0</b><span>منجز</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">إضافة مهمة</h3>
+      <div class="row">
+        <input id="title" placeholder="عنوان المهمة" />
+        <textarea id="details" placeholder="ملاحظات اختيارية"></textarea>
+        <input id="due" type="datetime-local" />
+        <select id="priority">
+          <option value="mid">أولوية متوسطة</option>
+          <option value="high">أولوية عالية</option>
+          <option value="low">أولوية منخفضة</option>
+        </select>
+        <div class="actions">
+          <button onclick="addTask()">حفظ المهمة</button>
+          <button class="secondary" onclick="requestNotify()">تفعيل الإشعارات</button>
+        </div>
+        <div class="note">ملاحظة مهمة: إشعارات PWA على الآيفون تحتاج أن تضيف التطبيق إلى الشاشة الرئيسية. التذكير المحلي هنا يعمل أثناء فتح التطبيق، أما الإشعارات الحقيقية وهو مغلق فتحتاج خادم Web Push لاحقًا.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="actions" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">قائمة المهام</h3>
+        <select id="filter" onchange="render()" style="max-width:180px">
+          <option value="all">كل المهام</option>
+          <option value="pending">غير المنجزة</option>
+          <option value="done">المنجزة</option>
+        </select>
+      </div>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="inner">
+      <button class="secondary" onclick="exportData()">نسخ احتياطي</button>
+      <button class="secondary" onclick="importData()">استرجاع</button>
+      <button class="danger" onclick="clearDone()">حذف المنجز</button>
+    </div>
+  </div>
+
+<script>
+const KEY='pwa_tasks_v1';
+let tasks = JSON.parse(localStorage.getItem(KEY) || '[]');
+function save(){localStorage.setItem(KEY, JSON.stringify(tasks)); render();}
+function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function fmt(dt){if(!dt)return 'بدون موعد'; try{return new Date(dt).toLocaleString('ar-JO',{dateStyle:'medium',timeStyle:'short'});}catch(e){return dt}}
+function addTask(){
+  const title=document.getElementById('title').value.trim();
+  if(!title){alert('اكتب عنوان المهمة');return;}
+  tasks.unshift({id:Date.now(),title,details:document.getElementById('details').value.trim(),due:document.getElementById('due').value,priority:document.getElementById('priority').value,done:false,created:new Date().toISOString(),notified:false});
+  document.getElementById('title').value='';document.getElementById('details').value='';document.getElementById('due').value='';
+  save(); scheduleChecks();
+}
+function toggle(id){tasks=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);save()}
+function del(id){if(confirm('حذف المهمة؟')){tasks=tasks.filter(t=>t.id!==id);save()}}
+function render(){
+  const f=document.getElementById('filter').value; const list=document.getElementById('list');
+  const filtered=tasks.filter(t=>f==='all'||(f==='done'?t.done:!t.done));
+  document.getElementById('total').textContent=tasks.length; document.getElementById('pending').textContent=tasks.filter(t=>!t.done).length; document.getElementById('done').textContent=tasks.filter(t=>t.done).length;
+  if(!filtered.length){list.innerHTML='<div class="empty">لا توجد مهام هنا</div>';return;}
+  list.innerHTML=filtered.map(t=>`<div class="task ${t.done?'done':''}"><div class="task-head"><div><div class="title">${esc(t.title)}</div><div class="meta">${esc(t.details)}</div><div class="meta">الموعد: ${fmt(t.due)}</div></div><span class="pill ${t.priority}">${t.priority==='high'?'عالية':t.priority==='low'?'منخفضة':'متوسطة'}</span></div><div class="actions"><button class="ok" onclick="toggle(${t.id})">${t.done?'إلغاء الإنجاز':'تم الإنجاز'}</button><button class="danger" onclick="del(${t.id})">حذف</button></div></div>`).join('');
+}
+async function requestNotify(){
+  if(!('Notification' in window)){alert('هذا المتصفح لا يدعم الإشعارات');return;}
+  const p=await Notification.requestPermission();
+  document.getElementById('status').textContent=p==='granted'?'الإشعارات مفعلة':'الإشعارات غير مفعلة';
+  if(p==='granted') new Notification('مهامي',{body:'تم تفعيل الإشعارات التجريبية'});
+}
+function scheduleChecks(){setInterval(checkDue,30000); checkDue();}
+function checkDue(){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const now=Date.now(); let changed=false;
+  tasks.forEach(t=>{ if(!t.done && t.due && !t.notified && new Date(t.due).getTime()<=now){ new Notification('تذكير مهمة',{body:t.title}); t.notified=true; changed=true; }});
+  if(changed) localStorage.setItem(KEY, JSON.stringify(tasks));
+}
+function clearDone(){tasks=tasks.filter(t=>!t.done);save()}
+function exportData(){navigator.clipboard.writeText(JSON.stringify(tasks,null,2)).then(()=>alert('تم نسخ النسخة الاحتياطية'))}
+function importData(){const data=prompt('الصق النسخة الاحتياطية هنا'); if(!data)return; try{const arr=JSON.parse(data); if(Array.isArray(arr)){tasks=arr;save();alert('تم الاسترجاع')}}catch(e){alert('البيانات غير صحيحة')}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone){document.getElementById('iosHelp').style.display='block';}
+render(); scheduleChecks();
+</script>
+</body>
+</html>
