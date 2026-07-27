@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="مهامي">
-  <meta name="description" content="تطبيق مهام عربي مستقل للآيفون يعمل دون إنترنت ويصدر التذكيرات إلى تقويم الجهاز.">
+  <meta name="description" content="تطبيق مهام عربي مستقل للآيفون يعمل دون إنترنت، مع نسخ احتياطي وملفات تقويم وتنبيهات محلية أثناء عمل التطبيق.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
@@ -32,6 +32,7 @@
         <h1 id="greetTitle">أهلًا بك 👋</h1>
       </div>
       <div class="topbar-actions">
+        <span class="connection-badge" id="connectionBadge">متصل</span>
         <button class="icon-button" id="menuButton" type="button" aria-label="فتح القائمة" aria-controls="sideMenu">☰</button>
       </div>
     </header>
@@ -46,10 +47,11 @@
           <span id="ringPercent">0%</span>
         </div>
         <div class="summary-copy">
-          <h2 id="summaryLabel">لا توجد مهام اليوم</h2>
+          <h2 id="summaryLabel">لا توجد مهام مستحقة اليوم</h2>
           <div class="summary-stats">
             <span><strong id="todayCount">0</strong> اليوم</span>
-            <span><strong id="openCount">0</strong> متبقية</span>
+            <span class="overdue-stat"><strong id="overdueCount">0</strong> متأخرة</span>
+            <span><strong id="openCount">0</strong> حالية</span>
             <span><strong id="doneCount">0</strong> مكتملة</span>
           </div>
         </div>
@@ -68,6 +70,7 @@
         <select id="filterSelect" aria-label="تصفية المهام">
           <option value="all">الكل</option>
           <option value="today">اليوم</option>
+          <option value="overdue">المتأخرة</option>
           <option value="high">أولوية عالية</option>
           <option value="scheduled">بموعد</option>
           <option value="unscheduled">دون موعد</option>
@@ -94,6 +97,7 @@
       <div>
         <p class="eyebrow">مهامي</p>
         <h2>تطبيق مستقل للآيفون</h2>
+        <small>الإصدار 15</small>
       </div>
       <button class="icon-button compact" id="closeMenuButton" type="button" aria-label="إغلاق القائمة">×</button>
     </div>
@@ -105,20 +109,22 @@
     </div>
 
     <div class="menu-group">
-      <button class="menu-item" type="button" data-menu-action="calendar"><span>▣</span><b>تصدير للتقويم</b></button>
+      <button class="menu-item" type="button" data-menu-action="calendar"><span>▣</span><b>إنشاء ملف تقويم للمهام</b></button>
+      <button class="menu-item" type="button" data-menu-action="notifications"><span>◌</span><b>تشخيص التنبيهات</b></button>
       <button class="menu-item" type="button" data-menu-action="backup"><span>⇩</span><b>نسخة احتياطية</b></button>
       <button class="menu-item" type="button" data-menu-action="restore"><span>⇧</span><b>استعادة نسخة</b></button>
+      <button class="menu-item" type="button" data-menu-action="recovery"><span>↶</span><b>استعادة ما قبل آخر استبدال</b></button>
       <button class="menu-item" type="button" data-menu-action="install"><span>⌂</span><b>تثبيت على الآيفون</b></button>
     </div>
 
     <div class="privacy-note">
       <strong>خصوصية كاملة</strong>
-      <p>لا حسابات، لا خادم، ولا خدمات إشعارات خارجية. تبقى بياناتك داخل الجهاز.</p>
+      <p>لا حسابات ولا قاعدة بيانات خارجية. تبقى المهام داخل الجهاز.</p>
     </div>
   </aside>
 
   <div class="modal-backdrop" id="taskModalBackdrop" hidden></div>
-  <section class="bottom-sheet" id="taskSheet" aria-hidden="true" aria-labelledby="taskSheetTitle">
+  <section class="bottom-sheet" id="taskSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="taskSheetTitle">
     <div class="sheet-handle" aria-hidden="true"></div>
     <header class="sheet-header">
       <h2 id="taskSheetTitle">مهمة جديدة</h2>
@@ -128,7 +134,7 @@
     <form id="taskForm" novalidate>
       <label class="field">
         <span>عنوان المهمة</span>
-        <input id="taskTitleInput" maxlength="160" required placeholder="ماذا تريد أن تنجز؟">
+        <input id="taskTitleInput" maxlength="160" required autocomplete="off" placeholder="ماذا تريد أن تنجز؟">
       </label>
 
       <label class="field">
@@ -156,7 +162,7 @@
 
       <div class="two-columns">
         <label class="field">
-          <span>تنبيه التقويم</span>
+          <span>وقت التنبيه</span>
           <select id="reminderInput">
             <option value="0">في وقت المهمة</option>
             <option value="5">قبل 5 دقائق</option>
@@ -197,13 +203,13 @@
         </div>
       </fieldset>
 
-      <p class="form-hint">بعد الحفظ، اضغط «إضافة للتقويم»، ثم اضغط «إضافة الكل» داخل تقويم الآيفون حتى يتفعّل التنبيه.</p>
+      <p class="form-hint">التطبيق يستطيع التذكير أثناء عمله. وللتنبيه بعد إغلاقه أنشئ ملف التقويم وأضفه إلى تقويم الآيفون.</p>
       <button class="primary-button" id="saveTaskButton" type="submit">حفظ المهمة</button>
     </form>
   </section>
 
   <div class="modal-backdrop" id="infoModalBackdrop" hidden></div>
-  <section class="dialog" id="infoDialog" aria-hidden="true" aria-labelledby="infoDialogTitle">
+  <section class="dialog" id="infoDialog" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="infoDialogTitle">
     <header class="dialog-header">
       <h2 id="infoDialogTitle">معلومة</h2>
       <button class="icon-button compact" id="closeInfoDialogButton" type="button" aria-label="إغلاق">×</button>
@@ -212,15 +218,7 @@
   </section>
 
   <input id="restoreFileInput" type="file" accept="application/json,.json" hidden>
-
-  <div class="update-banner hidden" id="updateBanner" hidden aria-hidden="true">
-    <span>توجد نسخة جديدة من التطبيق.</span>
-    <button id="applyUpdateButton" type="button">تحديث الآن</button>
-  </div>
-
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script src="./app.js" defer></script>
-  <script src="./calendar-fix.js" defer></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
