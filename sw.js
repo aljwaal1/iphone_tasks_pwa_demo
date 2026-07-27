@@ -1,6 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'iphone-tasks-local-v14-calendar-import-fix';
+const CACHE_NAME = 'iphone-tasks-local-v14-real-ics-route';
+const CALENDAR_EXPORT_CACHE = 'iphone-tasks-calendar-exports-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -23,7 +24,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME && key !== CALENDAR_EXPORT_CACHE)
+          .map((key) => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -45,10 +50,29 @@ async function networkFirst(request, fallback) {
   }
 }
 
+async function calendarExportResponse(request) {
+  const cache = await caches.open(CALENDAR_EXPORT_CACHE);
+  const response = await cache.match(request, { ignoreVary: true });
+  if (response) return response;
+
+  return new Response('Calendar export expired. Return to the app and create it again.', {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store'
+    }
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (url.pathname.endsWith('.ics')) {
+    event.respondWith(calendarExportResponse(event.request));
+    return;
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(networkFirst(event.request, './index.html'));

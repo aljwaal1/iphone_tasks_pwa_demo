@@ -1,6 +1,9 @@
 'use strict';
 
 (function calendarImportFix() {
+  const CALENDAR_EXPORT_CACHE = 'iphone-tasks-calendar-exports-v2';
+  const RETURN_FLAG = 'iphone_tasks_calendar_return_help';
+
   function pad2(value) {
     return String(value).padStart(2, '0');
   }
@@ -92,32 +95,100 @@
     ].join('\r\n');
   }
 
-  function showCalendarInstructions() {
-    if (typeof openInfoDialog !== 'function') return;
-    setTimeout(() => {
-      openInfoDialog('إكمال تفعيل التنبيه', `
-        <ol>
-          <li>في شاشة التقويم التي فتحت، اضغط <strong>إضافة الكل</strong> ثم اختر التقويم واضغط إضافة.</li>
-          <li>افتح الحدث بعد إضافته وتأكد أن خانة <strong>تنبيه</strong> ليست «بلا».</li>
-          <li>من إعدادات الآيفون افتح <strong>الإشعارات ← التقويم</strong> وفعّل السماح بالإشعارات، شاشة القفل، والـ<strong>أصوات</strong>.</li>
-        </ol>
-        <p><strong>مهم:</strong> مجرد تنزيل الملف إلى تطبيق «الملفات» لا يضيف موعدًا ولا ينشئ تنبيهًا.</p>
-      `);
-    }, 900);
+  function safeFilePart(value) {
+    return String(value || 'iphone-task')
+      .normalize('NFKD')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 50) || 'iphone-task';
   }
 
-  function openCalendarPreview(tasks, name) {
+  function showCalendarInstructions() {
+    if (typeof openInfoDialog !== 'function') return;
+    openInfoDialog('إكمال إضافة الموعد', `
+      <ol>
+        <li>إذا ظهرت معاينة التقويم، اضغط <strong>إضافة الكل</strong> أو <strong>إضافة</strong>.</li>
+        <li>اختر التقويم الذي تريد حفظ الموعد فيه.</li>
+        <li>بعد الإضافة افتح الحدث وتأكد أن خانة <strong>تنبيه</strong> ليست «بلا».</li>
+      </ol>
+      <p>إذا ظهر الملف في التنزيلات بدل التقويم، افتحه من زر التنزيلات في Safari ثم اضغط مشاركة واختر <strong>البريد</strong>؛ يدعم iPhone استيراد ملف ‎.ics من مرفق البريد.</p>
+    `);
+  }
+
+  async function cacheCalendarFile(content, name) {
+    if (!('caches' in window) || !('serviceWorker' in navigator)) return null;
+
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update().catch(() => {});
+    if (!navigator.serviceWorker.controller) return null;
+
+    const cache = await caches.open(CALENDAR_EXPORT_CACHE);
+    const oldRequests = await cache.keys();
+    await Promise.all(oldRequests.map((request) => cache.delete(request)));
+
+    const token = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const filename = `${safeFilePart(name)}.ics`;
+    const exportUrl = new URL(`./calendar-export-${token}.ics`, window.location.href);
+    const response = new Response(content, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/calendar; charset=utf-8',
+        'Content-Disposition': `inline; filename="${filename}"`,
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    });
+
+    await cache.put(exportUrl.href, response);
+    return exportUrl.href;
+  }
+
+  async function shareFallback(content, name) {
+    const filename = `${safeFilePart(name)}.ics`;
+    const file = new File([content], filename, { type: 'text/calendar;charset=utf-8' });
+
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: name,
+          text: 'افتح مرفق التقويم واضغط إضافة.'
+        });
+        return true;
+      }
+    } catch (error) {
+      if (error?.name === 'AbortError') return false;
+    }
+
+    const blobUrl = URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.href = blobUrl;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+    return true;
+  }
+
+  async function openCalendarFile(tasks, name) {
     if (!tasks.length) return false;
     const content = makeCalendar(tasks, name);
-    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
 
-    const preview = window.open(url, '_blank');
-    if (!preview) window.location.assign(url);
+    try {
+      const url = await cacheCalendarFile(content, name);
+      if (url) {
+        sessionStorage.setItem(RETURN_FLAG, '1');
+        window.location.assign(url);
+        return true;
+      }
+    } catch (error) {
+      console.error('Calendar route failed', error);
+    }
 
-    setTimeout(() => URL.revokeObjectURL(url), 120000);
-    showCalendarInstructions();
-    return true;
+    const shared = await shareFallback(content, name);
+    if (shared) showCalendarInstructions();
+    return shared;
   }
 
   function markExported(tasks) {
@@ -130,7 +201,7 @@
     if (typeof render === 'function') render();
   }
 
-  document.addEventListener('click', (event) => {
+  document.addEventListener('click', async (event) => {
     const taskCalendarButton = event.target.closest?.('.calendar-action');
     if (taskCalendarButton) {
       event.preventDefault();
@@ -143,7 +214,11 @@
         if (typeof toast === 'function') toast('هذه المهمة لا تحتوي على موعد');
         return;
       }
-      if (openCalendarPreview([task], task.title)) markExported([task]);
+      taskCalendarButton.disabled = true;
+      if (typeof toast === 'function') toast('جاري تجهيز ملف التقويم…');
+      const opened = await openCalendarFile([task], task.title);
+      taskCalendarButton.disabled = false;
+      if (opened) markExported([task]);
       return;
     }
 
@@ -160,7 +235,17 @@
       if (typeof closeMenu === 'function') closeMenu();
       return;
     }
-    if (openCalendarPreview(tasks, 'مهامي اليومية')) markExported(tasks);
+
+    allCalendarButton.disabled = true;
+    if (typeof toast === 'function') toast('جاري تجهيز ملف التقويم…');
+    const opened = await openCalendarFile(tasks, 'مهامي اليومية');
+    allCalendarButton.disabled = false;
+    if (opened) markExported(tasks);
     if (typeof closeMenu === 'function') closeMenu();
   }, true);
+
+  if (sessionStorage.getItem(RETURN_FLAG) === '1') {
+    sessionStorage.removeItem(RETURN_FLAG);
+    window.addEventListener('pageshow', () => setTimeout(showCalendarInstructions, 350), { once: true });
+  }
 })();
