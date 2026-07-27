@@ -1,11 +1,12 @@
 'use strict';
 
-const CACHE_NAME = 'iphone-tasks-local-v14-safari-update-fix';
+const CACHE_NAME = 'iphone-tasks-local-v14-calendar-import-fix';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './calendar-fix.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
