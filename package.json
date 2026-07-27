@@ -4,7 +4,7 @@
   "version": "15.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/core.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "check": "node --check app.js && node --check app-state.js && node --check app-ui.js && node --check app-services.js && node --check core.js && node --check sw.js && npm test"
   }
 }
