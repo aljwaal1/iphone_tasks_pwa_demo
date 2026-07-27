@@ -111,16 +111,31 @@ export function sourceTaskArray(parsed) {
 }
 
 export function normalizeTaskList(source, { regenerateIds = false } = {}) {
-  const seen = new Set();
-  return source
+  const tasks = source
     .slice(0, MAX_IMPORT_TASKS)
-    .map((item) => normalizeTask(item, { regenerateId: regenerateIds }))
-    .filter(Boolean)
-    .map((task) => {
-      if (seen.has(task.id)) task.id = makeId();
-      seen.add(task.id);
-      return task;
+    .map((item) => normalizeTask(item))
+    .filter(Boolean);
+  const idMap = new Map();
+  const seen = new Set();
+
+  tasks.forEach((task) => {
+    const oldId = task.id;
+    if (regenerateIds) {
+      task.id = makeId();
+      if (!idMap.has(oldId)) idMap.set(oldId, task.id);
+    } else if (seen.has(task.id)) {
+      task.id = makeId();
+    }
+    seen.add(task.id);
+  });
+
+  if (regenerateIds) {
+    tasks.forEach((task) => {
+      task.seriesId = task.seriesId ? idMap.get(task.seriesId) || null : null;
+      task.occurrenceOf = task.occurrenceOf ? idMap.get(task.occurrenceOf) || null : null;
     });
+  }
+  return tasks;
 }
 
 export function loadTasks() {
