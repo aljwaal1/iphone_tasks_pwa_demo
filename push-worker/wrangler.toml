@@ -1,0 +1,19 @@
+name = "iphone-tasks-push"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "iphone-tasks-push"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[vars]
+APP_ORIGIN = "https://aljwaal1.github.io"
+VAPID_SUBJECT = "mailto:admin@example.com"
+VAPID_PUBLIC_KEY = "REPLACE_WITH_PUBLIC_KEY"
+# ضع VAPID_PRIVATE_KEY عبر: npx wrangler secret put VAPID_PRIVATE_KEY
