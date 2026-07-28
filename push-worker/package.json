@@ -1,0 +1,15 @@
+{
+  "name": "iphone-tasks-push-worker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply iphone-tasks-push --local",
+    "db:remote": "wrangler d1 migrations apply iphone-tasks-push --remote",
+    "vapid": "web-push generate-vapid-keys --json"
+  },
+  "dependencies": { "web-push": "^3.6.7" },
+  "devDependencies": { "wrangler": "^4.26.0" }
+}
