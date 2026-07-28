@@ -1,37 +1,21 @@
 'use strict';
 
-const CACHE_NAME = 'iphone-tasks-local-v15-20260727';
+const CACHE_NAME = 'iphone-tasks-pwa-v16-web-push-20260728';
 const CALENDAR_EXPORT_CACHE = 'iphone-tasks-calendar-exports-v3';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './styles.css',
-  './app.js',
-  './app-state.js',
-  './app-ui.js',
-  './app-services.js',
-  './core.js',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png'
+  './', './index.html', './styles.css', './app.js', './app-state.js', './app-ui.js',
+  './app-services.js', './push-client.js', './push-config.js', './core.js',
+  './manifest.webmanifest', './icon-192.png', './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys
-        .filter((key) => key !== CACHE_NAME && key !== CALENDAR_EXPORT_CACHE)
-        .map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys
+    .filter((key) => key !== CACHE_NAME && key !== CALENDAR_EXPORT_CACHE)
+    .map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('message', (event) => {
@@ -47,8 +31,7 @@ async function networkFirst(request, fallback) {
     }
     return response;
   } catch (error) {
-    return (await caches.match(request))
-      || (fallback ? await caches.match(fallback) : Response.error());
+    return (await caches.match(request)) || (fallback ? await caches.match(fallback) : Response.error());
   }
 }
 
@@ -77,10 +60,28 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(networkFirst(event.request));
 });
 
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; }
+  catch (_) { payload = { body: event.data?.text() || 'لديك تذكير جديد' }; }
+  const title = String(payload.title || 'مهامي');
+  const options = {
+    body: String(payload.body || 'حان موعد إحدى مهامك'),
+    icon: './icon-192.png', badge: './icon-192.png',
+    tag: String(payload.tag || `iphone-tasks-${Date.now()}`),
+    renotify: true, vibrate: [200, 100, 200],
+    data: { url: payload.url || './', taskId: payload.taskId || null, due: payload.due || null }
+  };
+  const badgePromise = self.registration.setAppBadge ? self.registration.setAppBadge(1).catch(() => {}) : Promise.resolve();
+  event.waitUntil(Promise.all([self.registration.showNotification(title, options), badgePromise]));
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = new URL(event.notification.data?.url || './', self.registration.scope).href;
-  event.waitUntil(
+  const badgePromise = self.registration.clearAppBadge ? self.registration.clearAppBadge().catch(() => {}) : Promise.resolve();
+  event.waitUntil(Promise.all([
+    badgePromise,
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (windows) => {
       for (const client of windows) {
         if (new URL(client.url).origin === new URL(target).origin) {
@@ -91,5 +92,5 @@ self.addEventListener('notificationclick', (event) => {
       }
       if (clients.openWindow) await clients.openWindow(target);
     })
-  );
+  ]));
 });
