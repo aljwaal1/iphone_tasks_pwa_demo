@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'iphone-tasks-pwa-v17-shortcut-reminders-fix-20260729';
+const CACHE_NAME = 'iphone-tasks-pwa-v17-shortcut-clipboard-fix-20260729';
 const CALENDAR_EXPORT_CACHE = 'iphone-tasks-calendar-exports-v3';
 const APP_SHELL = [
   './', './index.html', './styles.css', './app.js', './app-state.js', './app-ui.js',
