@@ -38,6 +38,7 @@ import {
   updateConnectionBadge
 } from './app-services.js';
 import { initializePush, showPushCenter } from './push-client.js';
+import { initializeShortcutIntegration, installReminderShortcut } from './shortcut-client.js';
 
 function initializeHeader() {
   const now = new Date();
@@ -86,6 +87,7 @@ function wireEvents() {
     if (action === 'add') { closeMenu({ restore: false }); setTimeout(() => openTaskSheet(), 180); }
     if (action === 'active') setView('active');
     if (action === 'completed') setView('completed');
+    if (action === 'shortcut') installReminderShortcut();
     if (action === 'calendar') exportAllToCalendar(button);
     if (action === 'notifications') showPushCenter();
     if (action === 'backup') exportBackup();
@@ -123,6 +125,7 @@ async function init() {
   installServiceEventHandlers();
   wireEvents();
   render();
+  initializeShortcutIntegration();
   await registerServiceWorker();
   await initializePush();
   scheduleReminders();

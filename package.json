@@ -1,10 +1,10 @@
 {
   "name": "iphone-tasks-pwa",
   "private": true,
-  "version": "16.0.0",
+  "version": "17.0.0",
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check app.js && node --check app-state.js && node --check app-ui.js && node --check app-services.js && node --check push-client.js && node --check push-config.js && node --check core.js && node --check sw.js && node --check push-worker/src/index.js && npm test"
+    "check": "node --check app.js && node --check app-state.js && node --check app-ui.js && node --check app-services.js && node --check push-client.js && node --check push-config.js && node --check shortcut-client.js && node --check core.js && node --check sw.js && node --check push-worker/src/index.js && npm test"
   }
 }

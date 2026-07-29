@@ -1,10 +1,10 @@
 'use strict';
 
-const CACHE_NAME = 'iphone-tasks-pwa-v16-web-push-20260728';
+const CACHE_NAME = 'iphone-tasks-pwa-v17-shortcut-reminders-20260729';
 const CALENDAR_EXPORT_CACHE = 'iphone-tasks-calendar-exports-v3';
 const APP_SHELL = [
   './', './index.html', './styles.css', './app.js', './app-state.js', './app-ui.js',
-  './app-services.js', './push-client.js', './push-config.js', './core.js',
+  './app-services.js', './push-client.js', './push-config.js', './shortcut-client.js', './core.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png'
 ];
 
