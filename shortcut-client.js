@@ -26,12 +26,9 @@ function shortcutPayload(task) {
 function shortcutRunUrl(task) {
   const payload = shortcutPayload(task);
   if (!payload) return null;
-  const params = new URLSearchParams({
-    name: SHORTCUT_NAME,
-    input: 'text',
-    text: JSON.stringify(payload)
-  });
-  return `shortcuts://run-shortcut?${params.toString()}`;
+  const name = encodeURIComponent(SHORTCUT_NAME);
+  const text = encodeURIComponent(JSON.stringify(payload));
+  return `shortcuts://run-shortcut?name=${name}&input=text&text=${text}`;
 }
 
 export function installReminderShortcut() {
