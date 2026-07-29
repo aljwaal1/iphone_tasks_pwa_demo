@@ -8,217 +8,48 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="مهامي">
-  <meta name="description" content="تطبيق مهام عربي مستقل للآيفون يعمل دون إنترنت، مع نسخ احتياطي وملفات تقويم وتنبيهات محلية أثناء عمل التطبيق.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="description" content="تطبيق مهام عربي PWA للآيفون يعمل دون حسابات، مع Web Push لشاشة القفل والعمل دون إنترنت.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self' https://*.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./styles.css">
   <title>مهامي اليومية</title>
 </head>
 <body>
-  <svg width="0" height="0" aria-hidden="true" class="svg-defs">
-    <defs>
-      <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#70f5df"></stop>
-        <stop offset="1" stop-color="#15b9a6"></stop>
-      </linearGradient>
-    </defs>
-  </svg>
-
+  <svg width="0" height="0" aria-hidden="true" class="svg-defs"><defs><linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#70f5df"></stop><stop offset="1" stop-color="#15b9a6"></stop></linearGradient></defs></svg>
   <div class="app-shell">
-    <header class="topbar">
-      <div class="topbar-copy">
-        <p class="eyebrow" id="todayText">مهامك اليومية</p>
-        <h1 id="greetTitle">أهلًا بك 👋</h1>
-      </div>
-      <div class="topbar-actions">
-        <span class="connection-badge" id="connectionBadge">متصل</span>
-        <button class="icon-button" id="menuButton" type="button" aria-label="فتح القائمة" aria-controls="sideMenu">☰</button>
-      </div>
-    </header>
-
+    <header class="topbar"><div class="topbar-copy"><p class="eyebrow" id="todayText">مهامك اليومية</p><h1 id="greetTitle">أهلًا بك 👋</h1></div><div class="topbar-actions"><span class="connection-badge" id="connectionBadge">متصل</span><button class="icon-button" id="menuButton" type="button" aria-label="فتح القائمة" aria-controls="sideMenu">☰</button></div></header>
     <main class="main-content">
-      <section class="summary-card" aria-label="ملخص اليوم">
-        <div class="progress-ring" aria-hidden="true">
-          <svg viewBox="0 0 84 84">
-            <circle class="ring-track" cx="42" cy="42" r="35"></circle>
-            <circle class="ring-progress" id="ringProgress" cx="42" cy="42" r="35"></circle>
-          </svg>
-          <span id="ringPercent">0%</span>
-        </div>
-        <div class="summary-copy">
-          <h2 id="summaryLabel">لا توجد مهام مستحقة اليوم</h2>
-          <div class="summary-stats">
-            <span><strong id="todayCount">0</strong> اليوم</span>
-            <span class="overdue-stat"><strong id="overdueCount">0</strong> متأخرة</span>
-            <span><strong id="openCount">0</strong> حالية</span>
-            <span><strong id="doneCount">0</strong> مكتملة</span>
-          </div>
-        </div>
-      </section>
-
-      <nav class="view-tabs" aria-label="عرض المهام">
-        <button class="view-tab active" type="button" data-view="active">الحالية <span id="activeBadge">0</span></button>
-        <button class="view-tab" type="button" data-view="completed">المكتملة <span id="completedBadge">0</span></button>
-      </nav>
-
-      <section class="toolbar" aria-label="البحث والتصفية">
-        <label class="search-box">
-          <span aria-hidden="true">⌕</span>
-          <input id="searchInput" type="search" placeholder="ابحث في المهام" autocomplete="off">
-        </label>
-        <select id="filterSelect" aria-label="تصفية المهام">
-          <option value="all">الكل</option>
-          <option value="today">اليوم</option>
-          <option value="overdue">المتأخرة</option>
-          <option value="high">أولوية عالية</option>
-          <option value="scheduled">بموعد</option>
-          <option value="unscheduled">دون موعد</option>
-        </select>
-      </section>
-
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow" id="listEyebrow">قائمة العمل</p>
-          <h2 id="listTitle">المهام الحالية</h2>
-        </div>
-        <button class="text-button hidden" id="deleteCompletedButton" type="button">حذف المكتملة</button>
-      </div>
-
+      <section class="summary-card" aria-label="ملخص اليوم"><div class="progress-ring" aria-hidden="true"><svg viewBox="0 0 84 84"><circle class="ring-track" cx="42" cy="42" r="35"></circle><circle class="ring-progress" id="ringProgress" cx="42" cy="42" r="35"></circle></svg><span id="ringPercent">0%</span></div><div class="summary-copy"><h2 id="summaryLabel">لا توجد مهام مستحقة اليوم</h2><div class="summary-stats"><span><strong id="todayCount">0</strong> اليوم</span><span class="overdue-stat"><strong id="overdueCount">0</strong> متأخرة</span><span><strong id="openCount">0</strong> حالية</span><span><strong id="doneCount">0</strong> مكتملة</span></div></div></section>
+      <nav class="view-tabs" aria-label="عرض المهام"><button class="view-tab active" type="button" data-view="active">الحالية <span id="activeBadge">0</span></button><button class="view-tab" type="button" data-view="completed">المكتملة <span id="completedBadge">0</span></button></nav>
+      <section class="toolbar" aria-label="البحث والتصفية"><label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="ابحث في المهام" autocomplete="off"></label><select id="filterSelect" aria-label="تصفية المهام"><option value="all">الكل</option><option value="today">اليوم</option><option value="overdue">المتأخرة</option><option value="high">أولوية عالية</option><option value="scheduled">بموعد</option><option value="unscheduled">دون موعد</option></select></section>
+      <div class="section-heading"><div><p class="eyebrow" id="listEyebrow">قائمة العمل</p><h2 id="listTitle">المهام الحالية</h2></div><button class="text-button hidden" id="deleteCompletedButton" type="button">حذف المكتملة</button></div>
       <section id="tasksList" class="tasks-list" aria-live="polite"></section>
     </main>
   </div>
-
   <button class="fab" id="addTaskButton" type="button" aria-label="إضافة مهمة">＋</button>
-
   <div class="scrim" id="menuScrim" hidden></div>
   <aside class="side-menu" id="sideMenu" aria-hidden="true" aria-label="القائمة الرئيسية">
-    <div class="side-menu-header">
-      <div>
-        <p class="eyebrow">مهامي</p>
-        <h2>تطبيق مستقل للآيفون</h2>
-        <small>الإصدار 15</small>
-      </div>
-      <button class="icon-button compact" id="closeMenuButton" type="button" aria-label="إغلاق القائمة">×</button>
-    </div>
-
-    <div class="menu-group">
-      <button class="menu-item" type="button" data-menu-action="add"><span>＋</span><b>إضافة مهمة</b></button>
-      <button class="menu-item" type="button" data-menu-action="active"><span>◉</span><b>المهام الحالية</b><em id="menuActiveCount">0</em></button>
-      <button class="menu-item" type="button" data-menu-action="completed"><span>✓</span><b>المهام المكتملة</b><em id="menuCompletedCount">0</em></button>
-    </div>
-
-    <div class="menu-group">
-      <button class="menu-item" type="button" data-menu-action="calendar"><span>▣</span><b>إنشاء ملف تقويم للمهام</b></button>
-      <button class="menu-item" type="button" data-menu-action="notifications"><span>◌</span><b>تشخيص التنبيهات</b></button>
-      <button class="menu-item" type="button" data-menu-action="backup"><span>⇩</span><b>نسخة احتياطية</b></button>
-      <button class="menu-item" type="button" data-menu-action="restore"><span>⇧</span><b>استعادة نسخة</b></button>
-      <button class="menu-item" type="button" data-menu-action="recovery"><span>↶</span><b>استعادة ما قبل آخر استبدال</b></button>
-      <button class="menu-item" type="button" data-menu-action="install"><span>⌂</span><b>تثبيت على الآيفون</b></button>
-    </div>
-
-    <div class="privacy-note">
-      <strong>خصوصية كاملة</strong>
-      <p>لا حسابات ولا قاعدة بيانات خارجية. تبقى المهام داخل الجهاز.</p>
-    </div>
+    <div class="side-menu-header"><div><p class="eyebrow">مهامي</p><h2>تطبيق PWA للآيفون</h2><small>الإصدار 16 — Web Push</small></div><button class="icon-button compact" id="closeMenuButton" type="button" aria-label="إغلاق القائمة">×</button></div>
+    <div class="menu-group"><button class="menu-item" type="button" data-menu-action="add"><span>＋</span><b>إضافة مهمة</b></button><button class="menu-item" type="button" data-menu-action="active"><span>◉</span><b>المهام الحالية</b><em id="menuActiveCount">0</em></button><button class="menu-item" type="button" data-menu-action="completed"><span>✓</span><b>المهام المكتملة</b><em id="menuCompletedCount">0</em></button></div>
+    <div class="menu-group"><button class="menu-item" type="button" data-menu-action="notifications"><span>◌</span><b>إشعارات شاشة القفل</b></button><button class="menu-item" type="button" data-menu-action="calendar"><span>▣</span><b>إنشاء ملف تقويم للمهام</b></button><button class="menu-item" type="button" data-menu-action="backup"><span>⇩</span><b>نسخة احتياطية</b></button><button class="menu-item" type="button" data-menu-action="restore"><span>⇧</span><b>استعادة نسخة</b></button><button class="menu-item" type="button" data-menu-action="recovery"><span>↶</span><b>استعادة ما قبل آخر استبدال</b></button><button class="menu-item" type="button" data-menu-action="install"><span>⌂</span><b>تثبيت على الآيفون</b></button></div>
+    <div class="privacy-note"><strong>دون حسابات</strong><p>لا اسم مستخدم ولا كلمة مرور. يستخدم الإشعار معرفًا عشوائيًا لهذا الجهاز فقط.</p></div>
   </aside>
-
   <div class="modal-backdrop" id="taskModalBackdrop" hidden></div>
   <section class="bottom-sheet" id="taskSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="taskSheetTitle">
-    <div class="sheet-handle" aria-hidden="true"></div>
-    <header class="sheet-header">
-      <h2 id="taskSheetTitle">مهمة جديدة</h2>
-      <button class="icon-button compact" id="closeTaskSheetButton" type="button" aria-label="إغلاق">×</button>
-    </header>
-
+    <div class="sheet-handle" aria-hidden="true"></div><header class="sheet-header"><h2 id="taskSheetTitle">مهمة جديدة</h2><button class="icon-button compact" id="closeTaskSheetButton" type="button" aria-label="إغلاق">×</button></header>
     <form id="taskForm" novalidate>
-      <label class="field">
-        <span>عنوان المهمة</span>
-        <input id="taskTitleInput" maxlength="160" required autocomplete="off" placeholder="ماذا تريد أن تنجز؟">
-      </label>
-
-      <label class="field">
-        <span>ملاحظة اختيارية</span>
-        <textarea id="taskNoteInput" maxlength="1000" placeholder="تفاصيل إضافية"></textarea>
-      </label>
-
-      <div class="two-columns">
-        <label class="field">
-          <span>التاريخ</span>
-          <input id="taskDateInput" type="date">
-        </label>
-        <label class="field">
-          <span>الوقت</span>
-          <input id="taskTimeInput" type="time" step="60">
-        </label>
-      </div>
-
-      <div class="quick-times" aria-label="أوقات سريعة">
-        <button type="button" data-quick-minutes="5">بعد 5 دقائق</button>
-        <button type="button" data-quick-minutes="30">بعد 30 دقيقة</button>
-        <button type="button" data-quick-minutes="60">بعد ساعة</button>
-        <button type="button" id="quickEightButton">8 مساءً</button>
-      </div>
-
-      <div class="two-columns">
-        <label class="field">
-          <span>وقت التنبيه</span>
-          <select id="reminderInput">
-            <option value="0">في وقت المهمة</option>
-            <option value="5">قبل 5 دقائق</option>
-            <option value="15">قبل 15 دقيقة</option>
-            <option value="30">قبل 30 دقيقة</option>
-            <option value="60">قبل ساعة</option>
-            <option value="1440">قبل يوم</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>التكرار</span>
-          <select id="repeatInput">
-            <option value="none">بدون تكرار</option>
-            <option value="daily">يوميًا</option>
-            <option value="weekly">أسبوعيًا</option>
-            <option value="monthly">شهريًا</option>
-          </select>
-        </label>
-      </div>
-
-      <fieldset class="choice-fieldset">
-        <legend>الأولوية</legend>
-        <div class="choice-row" id="priorityChoices">
-          <button type="button" data-value="high" class="choice high">عالية</button>
-          <button type="button" data-value="medium" class="choice medium">متوسطة</button>
-          <button type="button" data-value="normal" class="choice normal selected">عادية</button>
-        </div>
-      </fieldset>
-
-      <fieldset class="choice-fieldset">
-        <legend>التصنيف</legend>
-        <div class="choice-row category-row" id="categoryChoices">
-          <button type="button" data-value="عام" class="choice selected">عام</button>
-          <button type="button" data-value="عمل" class="choice">عمل</button>
-          <button type="button" data-value="دراسة" class="choice">دراسة</button>
-          <button type="button" data-value="منزل" class="choice">منزل</button>
-          <button type="button" data-value="صحة" class="choice">صحة</button>
-        </div>
-      </fieldset>
-
-      <p class="form-hint">التطبيق يستطيع التذكير أثناء عمله. وللتنبيه بعد إغلاقه أنشئ ملف التقويم وأضفه إلى تقويم الآيفون.</p>
-      <button class="primary-button" id="saveTaskButton" type="submit">حفظ المهمة</button>
+      <label class="field"><span>عنوان المهمة</span><input id="taskTitleInput" maxlength="160" required autocomplete="off" placeholder="ماذا تريد أن تنجز؟"></label>
+      <label class="field"><span>ملاحظة اختيارية</span><textarea id="taskNoteInput" maxlength="1000" placeholder="تفاصيل إضافية"></textarea></label>
+      <div class="two-columns"><label class="field"><span>التاريخ</span><input id="taskDateInput" type="date"></label><label class="field"><span>الوقت</span><input id="taskTimeInput" type="time" step="60"></label></div>
+      <div class="quick-times" aria-label="أوقات سريعة"><button type="button" data-quick-minutes="5">بعد 5 دقائق</button><button type="button" data-quick-minutes="30">بعد 30 دقيقة</button><button type="button" data-quick-minutes="60">بعد ساعة</button><button type="button" id="quickEightButton">8 مساءً</button></div>
+      <div class="two-columns"><label class="field"><span>وقت التنبيه</span><select id="reminderInput"><option value="0">في وقت المهمة</option><option value="5">قبل 5 دقائق</option><option value="15">قبل 15 دقيقة</option><option value="30">قبل 30 دقيقة</option><option value="60">قبل ساعة</option><option value="1440">قبل يوم</option></select></label><label class="field"><span>التكرار</span><select id="repeatInput"><option value="none">بدون تكرار</option><option value="daily">يوميًا</option><option value="weekly">أسبوعيًا</option><option value="monthly">شهريًا</option></select></label></div>
+      <fieldset class="choice-fieldset"><legend>الأولوية</legend><div class="choice-row" id="priorityChoices"><button type="button" data-value="high" class="choice high">عالية</button><button type="button" data-value="medium" class="choice medium">متوسطة</button><button type="button" data-value="normal" class="choice normal selected">عادية</button></div></fieldset>
+      <fieldset class="choice-fieldset"><legend>التصنيف</legend><div class="choice-row category-row" id="categoryChoices"><button type="button" data-value="عام" class="choice selected">عام</button><button type="button" data-value="عمل" class="choice">عمل</button><button type="button" data-value="دراسة" class="choice">دراسة</button><button type="button" data-value="منزل" class="choice">منزل</button><button type="button" data-value="صحة" class="choice">صحة</button></div></fieldset>
+      <p class="form-hint">بعد تفعيل Web Push يصل التنبيه إلى شاشة القفل وفي الخلفية، حتى عند إغلاق التطبيق.</p><button class="primary-button" id="saveTaskButton" type="submit">حفظ المهمة</button>
     </form>
   </section>
-
-  <div class="modal-backdrop" id="infoModalBackdrop" hidden></div>
-  <section class="dialog" id="infoDialog" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="infoDialogTitle">
-    <header class="dialog-header">
-      <h2 id="infoDialogTitle">معلومة</h2>
-      <button class="icon-button compact" id="closeInfoDialogButton" type="button" aria-label="إغلاق">×</button>
-    </header>
-    <div id="infoDialogBody" class="dialog-body"></div>
-  </section>
-
-  <input id="restoreFileInput" type="file" accept="application/json,.json" hidden>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="./app.js"></script>
+  <div class="modal-backdrop" id="infoModalBackdrop" hidden></div><section class="dialog" id="infoDialog" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="infoDialogTitle"><header class="dialog-header"><h2 id="infoDialogTitle">معلومة</h2><button class="icon-button compact" id="closeInfoDialogButton" type="button" aria-label="إغلاق">×</button></header><div id="infoDialogBody" class="dialog-body"></div></section>
+  <input id="restoreFileInput" type="file" accept="application/json,.json" hidden><div class="toast" id="toast" role="status" aria-live="polite"></div><script type="module" src="./app.js"></script>
 </body>
 </html>

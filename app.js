@@ -35,9 +35,9 @@ import {
   scheduleReminders,
   showCalendarHelp,
   showInstallHelp,
-  showNotificationCenter,
   updateConnectionBadge
 } from './app-services.js';
+import { initializePush, showPushCenter } from './push-client.js';
 
 function initializeHeader() {
   const now = new Date();
@@ -87,7 +87,7 @@ function wireEvents() {
     if (action === 'active') setView('active');
     if (action === 'completed') setView('completed');
     if (action === 'calendar') exportAllToCalendar(button);
-    if (action === 'notifications') showNotificationCenter();
+    if (action === 'notifications') showPushCenter();
     if (action === 'backup') exportBackup();
     if (action === 'restore') { closeMenu({ restore: false }); el('restoreFileInput').click(); }
     if (action === 'recovery') restoreRecoverySnapshot();
@@ -124,6 +124,7 @@ async function init() {
   wireEvents();
   render();
   await registerServiceWorker();
+  await initializePush();
   scheduleReminders();
   state.reminderInterval = setInterval(checkDueReminders, 60_000);
 
