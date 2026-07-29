@@ -23,12 +23,12 @@ function shortcutPayload(task) {
   };
 }
 
-function shortcutRunUrl(task) {
-  const payload = shortcutPayload(task);
-  if (!payload) return null;
+function shortcutRunUrl(mode = 'clipboard', text = '') {
   const name = encodeURIComponent(SHORTCUT_NAME);
-  const text = encodeURIComponent(JSON.stringify(payload));
-  return `shortcuts://run-shortcut?name=${name}&input=text&text=${text}`;
+  if (mode === 'text') {
+    return `shortcuts://run-shortcut?name=${name}&input=text&text=${encodeURIComponent(text)}`;
+  }
+  return `shortcuts://run-shortcut?name=${name}&input=clipboard`;
 }
 
 export function installReminderShortcut() {
@@ -36,19 +36,27 @@ export function installReminderShortcut() {
   location.href = SHORTCUT_INSTALL_URL;
 }
 
-export function runReminderShortcut(taskId) {
+export async function runReminderShortcut(taskId) {
   const task = state.tasks.find((item) => item.id === taskId);
   if (!task) {
     toast('تعذر العثور على المهمة');
     return;
   }
-  const url = shortcutRunUrl(task);
-  if (!url) {
+  const payload = shortcutPayload(task);
+  if (!payload) {
     toast('أضف تاريخًا ووقتًا للمهمة أولًا');
     return;
   }
+
+  const text = JSON.stringify(payload);
   toast('جاري فتح اختصار التذكيرات…');
-  location.href = url;
+  try {
+    await navigator.clipboard.writeText(text);
+    location.href = shortcutRunUrl('clipboard');
+  } catch (error) {
+    console.warn('Clipboard handoff failed, using URL text input', error);
+    location.href = shortcutRunUrl('text', text);
+  }
 }
 
 function addShortcutButton(card) {
